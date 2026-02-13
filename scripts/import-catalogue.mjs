@@ -11,9 +11,17 @@ import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 
-// ─── Config ───
-const SUPABASE_URL = "https://odirisqsqpdvitisvdzn.supabase.co";
-const SERVICE_KEY = "REDACTED";
+// ─── Config (lire depuis .env.local) ───
+const envFile = fs.readFileSync(path.resolve(".env.local"), "utf8");
+const envVars = Object.fromEntries(
+  envFile.split("\n").filter(l => l && !l.startsWith("#")).map(l => l.split("=").map(s => s.trim())).filter(([k]) => k)
+);
+const SUPABASE_URL = envVars.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_KEY = envVars.SUPABASE_SERVICE_ROLE_KEY;
+if (!SUPABASE_URL || !SERVICE_KEY) {
+  console.error("❌ NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY doivent être dans .env.local");
+  process.exit(1);
+}
 const HEADERS = {
   apikey: SERVICE_KEY,
   Authorization: `Bearer ${SERVICE_KEY}`,
