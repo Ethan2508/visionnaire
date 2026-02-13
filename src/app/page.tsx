@@ -643,82 +643,101 @@ export default function HomePage() {
             {/* Repeat logos twice for seamless loop */}
             {[...Array(2)].map((_, setIndex) => (
               <div key={setIndex} className="flex items-center gap-16 shrink-0">
+                {/* Cartier — 3.4:1 wide text */}
                 <Image
                   src="/images/brands/cartier.svg"
                   alt="Cartier"
                   width={130}
-                  height={40}
-                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  height={38}
+                  className="h-[26px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
+                {/* Gucci — 1:1 square emblem → needs more height */}
                 <Image
                   src="/images/brands/gucci.svg"
                   alt="Gucci"
-                  width={120}
+                  width={40}
                   height={40}
-                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  className="h-[38px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
+                {/* Prada — 4.4:1 very wide text */}
                 <Image
                   src="/images/brands/prada.png"
                   alt="Prada"
-                  width={120}
-                  height={40}
-                  className="h-7 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  width={110}
+                  height={25}
+                  className="h-[22px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
+                {/* Fendi — 3.9:1 wide text */}
                 <Image
                   src="/images/brands/fendi.png"
                   alt="Fendi"
-                  width={120}
-                  height={40}
-                  className="h-7 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  width={100}
+                  height={26}
+                  className="h-[22px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
+                {/* Fred — 2.3:1 medium with emblem */}
                 <Image
                   src="/images/brands/fred.png"
                   alt="Fred"
-                  width={100}
-                  height={40}
-                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  width={70}
+                  height={30}
+                  className="h-[30px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
+                {/* YSL — 4.8:1 very wide text */}
                 <Image
                   src="/images/brands/ysl.png"
                   alt="Yves Saint Laurent"
                   width={120}
-                  height={40}
-                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  height={25}
+                  className="h-[20px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
+                {/* Montblanc — 1:1 square with star emblem */}
                 <Image
                   src="/images/brands/montblanc.png"
                   alt="Montblanc"
-                  width={130}
+                  width={40}
                   height={40}
-                  className="h-7 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  className="h-[38px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
+                {/* Off-White — 1.8:1 medium-compact */}
                 <Image
                   src="/images/brands/off-white.png"
                   alt="Off-White"
-                  width={130}
-                  height={40}
-                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  width={56}
+                  height={32}
+                  className="h-[30px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
+                {/* Miu Miu — 4:1 wide text */}
                 <Image
                   src="/images/brands/miu-miu.png"
                   alt="Miu Miu"
-                  width={120}
-                  height={40}
-                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  width={100}
+                  height={25}
+                  className="h-[22px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
+                {/* Palm Angels — 5.3:1 very wide text */}
                 <Image
                   src="/images/brands/palm-angels.png"
                   alt="Palm Angels"
-                  width={140}
-                  height={40}
-                  className="h-7 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  width={120}
+                  height={22}
+                  className="h-[18px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
+                {/* Spektre — 3.4:1 wide text, small source */}
                 <Image
                   src="/images/brands/spektre.png"
                   alt="Spektre"
-                  width={120}
-                  height={40}
-                  className="h-7 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  width={90}
+                  height={26}
+                  className="h-[22px] w-auto opacity-40 hover:opacity-80 transition-opacity"
+                />
+                {/* Dior — 2.3:1 medium text */}
+                <Image
+                  src="/images/brands/dior.png"
+                  alt="Dior"
+                  width={80}
+                  height={35}
+                  className="h-[28px] w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
               </div>
             ))}
