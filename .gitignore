@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# project root loose files
+*.zip
+*.txt
+Logo.png
+hero-*.avif
+hero-*.png
+hero-*.jpg
