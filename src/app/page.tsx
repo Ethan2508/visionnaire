@@ -644,6 +644,62 @@ export default function HomePage() {
             {[...Array(2)].map((_, setIndex) => (
               <div key={setIndex} className="flex items-center gap-16 shrink-0">
                 <Image
+                  src="/images/brands/cartier.svg"
+                  alt="Cartier"
+                  width={130}
+                  height={40}
+                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                />
+                <Image
+                  src="/images/brands/gucci.svg"
+                  alt="Gucci"
+                  width={120}
+                  height={40}
+                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                />
+                <Image
+                  src="/images/brands/prada.png"
+                  alt="Prada"
+                  width={120}
+                  height={40}
+                  className="h-7 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                />
+                <Image
+                  src="/images/brands/fendi.png"
+                  alt="Fendi"
+                  width={120}
+                  height={40}
+                  className="h-7 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                />
+                <Image
+                  src="/images/brands/fred.png"
+                  alt="Fred"
+                  width={100}
+                  height={40}
+                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                />
+                <Image
+                  src="/images/brands/ysl.png"
+                  alt="Yves Saint Laurent"
+                  width={120}
+                  height={40}
+                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                />
+                <Image
+                  src="/images/brands/montblanc.png"
+                  alt="Montblanc"
+                  width={130}
+                  height={40}
+                  className="h-7 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                />
+                <Image
+                  src="/images/brands/off-white.png"
+                  alt="Off-White"
+                  width={130}
+                  height={40}
+                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                />
+                <Image
                   src="/images/brands/miu-miu.png"
                   alt="Miu Miu"
                   width={120}
@@ -658,40 +714,12 @@ export default function HomePage() {
                   className="h-7 w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
                 <Image
-                  src="/images/brands/off-white.png"
-                  alt="Off-White"
-                  width={130}
+                  src="/images/brands/spektre.png"
+                  alt="Spektre"
+                  width={120}
                   height={40}
-                  className="h-8 w-auto opacity-40 hover:opacity-80 transition-opacity"
+                  className="h-7 w-auto opacity-40 hover:opacity-80 transition-opacity"
                 />
-                {/* Text placeholders for brands without logos yet */}
-                <span className="text-xl font-light tracking-wider text-stone-300 uppercase">
-                  Ray-Ban
-                </span>
-                <span className="text-xl font-light tracking-wider text-stone-300 uppercase">
-                  Cartier
-                </span>
-                <span className="text-xl font-light tracking-wider text-stone-300 uppercase">
-                  Dior
-                </span>
-                <span className="text-xl font-light tracking-wider text-stone-300 uppercase">
-                  Gucci
-                </span>
-                <span className="text-xl font-light tracking-wider text-stone-300 uppercase">
-                  Prada
-                </span>
-                <span className="text-xl font-light tracking-wider text-stone-300 uppercase">
-                  Tom Ford
-                </span>
-                <span className="text-xl font-light tracking-wider text-stone-300 uppercase">
-                  Oakley
-                </span>
-                <span className="text-xl font-light tracking-wider text-stone-300 uppercase">
-                  Versace
-                </span>
-                <span className="text-xl font-light tracking-wider text-stone-300 uppercase">
-                  Fendi
-                </span>
               </div>
             ))}
           </div>

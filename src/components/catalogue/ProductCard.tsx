@@ -1,12 +1,17 @@
+"use client";
+
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProductCardProps {
   slug: string;
   name: string;
   brandName?: string;
   price: number;
-  imageUrl?: string;
+  images?: { url: string; is_primary?: boolean }[];
+  imageUrl?: string; // fallback si pas d'images[]
   category: string;
   requiresPrescription: boolean;
 }
@@ -16,22 +21,114 @@ export default function ProductCard({
   name,
   brandName,
   price,
+  images,
   imageUrl,
   category,
   requiresPrescription,
 }: ProductCardProps) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Build image list: use images array if available, fallback to single imageUrl
+  const imageList = images && images.length > 0
+    ? images.map((img) => img.url)
+    : imageUrl
+      ? [imageUrl]
+      : [];
+
+  const hasMultiple = imageList.length > 1;
+
+  const goTo = useCallback(
+    (e: React.MouseEvent, index: number) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setCurrentIndex(index);
+    },
+    []
+  );
+
+  const prev = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setCurrentIndex((i) => (i === 0 ? imageList.length - 1 : i - 1));
+    },
+    [imageList.length]
+  );
+
+  const next = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setCurrentIndex((i) => (i === imageList.length - 1 ? 0 : i + 1));
+    },
+    [imageList.length]
+  );
+
   return (
     <Link
       href={`/catalogue/${slug}`}
       className="group bg-white rounded-xl border border-stone-200 overflow-hidden hover:shadow-lg hover:border-stone-300 transition-all"
     >
       <div className="aspect-square bg-stone-100 relative overflow-hidden">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+        {imageList.length > 0 ? (
+          <>
+            {/* Images container */}
+            <div
+              className="flex h-full transition-transform duration-300 ease-out"
+              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+              {imageList.map((url, i) => (
+                <img
+                  key={i}
+                  src={url}
+                  alt={`${name} - ${i + 1}`}
+                  className="w-full h-full object-cover shrink-0"
+                  loading={i === 0 ? "eager" : "lazy"}
+                />
+              ))}
+            </div>
+
+            {/* Arrows (visible on hover only) */}
+            {hasMultiple && (
+              <>
+                <button
+                  onClick={prev}
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                  aria-label="Image precedente"
+                >
+                  <ChevronLeft size={16} className="text-stone-700" />
+                </button>
+                <button
+                  onClick={next}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                  aria-label="Image suivante"
+                >
+                  <ChevronRight size={16} className="text-stone-700" />
+                </button>
+
+                {/* Dots */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                  {imageList.slice(0, 5).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={(e) => goTo(e, i)}
+                      className={`w-1.5 h-1.5 rounded-full transition-all ${
+                        currentIndex === i
+                          ? "bg-white w-3"
+                          : "bg-white/60 hover:bg-white/80"
+                      }`}
+                      aria-label={`Image ${i + 1}`}
+                    />
+                  ))}
+                  {imageList.length > 5 && (
+                    <span className="text-[8px] text-white/80 ml-0.5">
+                      +{imageList.length - 5}
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-stone-300">
             <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -40,7 +137,7 @@ export default function ProductCard({
           </div>
         )}
         {requiresPrescription && (
-          <span className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+          <span className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-medium px-2 py-0.5 rounded-full z-10">
             Verres correcteurs
           </span>
         )}

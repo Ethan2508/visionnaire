@@ -127,22 +127,18 @@ export default function BrandDetailPage() {
         </p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map((product) => {
-            const primaryImage = product.product_images?.find((img) => img.is_primary)
-              || product.product_images?.[0];
-            return (
+          {products.map((product) => (
               <ProductCard
                 key={product.id}
                 slug={product.slug}
                 name={product.name}
                 brandName={product.brands?.name}
                 price={product.base_price}
-                imageUrl={primaryImage?.url}
+                images={product.product_images}
                 category={product.category}
                 requiresPrescription={product.requires_prescription}
               />
-            );
-          })}
+          ))}
         </div>
       )}
     </div>

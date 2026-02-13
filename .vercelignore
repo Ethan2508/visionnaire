@@ -1,0 +1,7 @@
+*.zip
+*.txt
+Logo.png
+hero-*.avif
+hero-*.png
+hero-*.jpg
+supabase-schema.sql

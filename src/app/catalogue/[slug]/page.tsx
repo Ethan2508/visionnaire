@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { formatPrice, categoryLabel } from "@/lib/utils";
-import { ShoppingBag, ChevronRight, Check } from "lucide-react";
+import { ShoppingBag, ChevronRight, ChevronLeft, Check, Search } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart";
 
 interface Variant {
@@ -24,6 +24,7 @@ interface ProductImage {
   alt_text: string | null;
   is_primary: boolean;
   variant_id: string | null;
+  sort_order?: number;
 }
 
 interface Product {
@@ -49,8 +50,13 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string>("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
+
+  // Zoom state
+  const [isZooming, setIsZooming] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const mainImageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadProduct();
@@ -68,16 +74,39 @@ export default function ProductDetailPage() {
       .single()) as { data: Product | null };
 
     if (data) {
+      // Sort images: primary first, then by sort_order
+      data.product_images.sort((a, b) => {
+        if (a.is_primary && !b.is_primary) return -1;
+        if (!a.is_primary && b.is_primary) return 1;
+        return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      });
       setProduct(data);
       const activeVariants = data.product_variants.filter((v) => v.is_active);
       if (activeVariants.length > 0) {
         setSelectedVariant(activeVariants[0]);
       }
-      const primaryImg = data.product_images.find((img) => img.is_primary);
-      setSelectedImage(primaryImg?.url || data.product_images[0]?.url || "");
+      setCurrentImageIndex(0);
     }
     setLoading(false);
   }
+
+  const images = product?.product_images ?? [];
+
+  const prevImage = useCallback(() => {
+    setCurrentImageIndex((i) => (i === 0 ? images.length - 1 : i - 1));
+  }, [images.length]);
+
+  const nextImage = useCallback(() => {
+    setCurrentImageIndex((i) => (i === images.length - 1 ? 0 : i + 1));
+  }, [images.length]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!mainImageRef.current) return;
+    const rect = mainImageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  }, []);
 
   if (loading) {
     return (
@@ -107,6 +136,7 @@ export default function ProductDetailPage() {
 
   const currentPrice = selectedVariant?.price_override ?? product.base_price;
   const activeVariants = product.product_variants.filter((v) => v.is_active);
+  const currentImage = images[currentImageIndex];
 
   const specs = [
     { label: "Categorie", value: categoryLabel(product.category) },
@@ -134,37 +164,97 @@ export default function ProductDetailPage() {
           </>
         )}
         <ChevronRight size={14} />
-        <span className="text-stone-900">{product.name}</span>
+        <span className="text-stone-900 truncate max-w-[200px]">{product.name}</span>
       </nav>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-        {/* Images */}
+        {/* Images - Carrousel + Zoom */}
         <div>
-          <div className="aspect-square bg-stone-100 rounded-xl overflow-hidden mb-4">
-            {selectedImage ? (
-              <img
-                src={selectedImage}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+          {/* Main image with zoom */}
+          <div
+            ref={mainImageRef}
+            className="aspect-square bg-stone-100 rounded-xl overflow-hidden mb-3 relative group cursor-zoom-in"
+            onMouseEnter={() => setIsZooming(true)}
+            onMouseLeave={() => setIsZooming(false)}
+            onMouseMove={handleMouseMove}
+          >
+            {currentImage ? (
+              <>
+                {/* Normal image */}
+                <img
+                  src={currentImage.url}
+                  alt={currentImage.alt_text || product.name}
+                  className={`w-full h-full object-cover transition-opacity duration-200 ${
+                    isZooming ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+                {/* Zoomed image (shown on hover) */}
+                <div
+                  className={`absolute inset-0 transition-opacity duration-200 ${
+                    isZooming ? "opacity-100" : "opacity-0 pointer-events-none"
+                  }`}
+                  style={{
+                    backgroundImage: `url(${currentImage.url})`,
+                    backgroundSize: "250%",
+                    backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                    backgroundRepeat: "no-repeat",
+                  }}
+                />
+                {/* Zoom indicator */}
+                <div
+                  className={`absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-sm transition-opacity ${
+                    isZooming ? "opacity-0" : "opacity-0 group-hover:opacity-100"
+                  }`}
+                >
+                  <Search size={16} className="text-stone-600" />
+                </div>
+              </>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-stone-300">
                 Pas d&#39;image
               </div>
             )}
+
+            {/* Carousel arrows */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+                  aria-label="Image precedente"
+                >
+                  <ChevronLeft size={18} className="text-stone-700" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white z-10"
+                  aria-label="Image suivante"
+                >
+                  <ChevronRight size={18} className="text-stone-700" />
+                </button>
+
+                {/* Counter */}
+                <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  {currentImageIndex + 1} / {images.length}
+                </div>
+              </>
+            )}
           </div>
 
-          {product.product_images.length > 1 && (
-            <div className="grid grid-cols-4 gap-2">
-              {product.product_images.map((img) => (
+          {/* Thumbnails */}
+          {images.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {images.map((img, i) => (
                 <button
                   key={img.id}
-                  onClick={() => setSelectedImage(img.url)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                    selectedImage === img.url ? "border-stone-900" : "border-stone-200"
+                  onClick={() => setCurrentImageIndex(i)}
+                  className={`shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    currentImageIndex === i
+                      ? "border-stone-900 ring-1 ring-stone-900"
+                      : "border-stone-200 hover:border-stone-400"
                   }`}
                 >
-                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                  <img src={img.url} alt="" className="w-full h-full object-cover" loading="lazy" />
                 </button>
               ))}
             </div>
@@ -195,7 +285,7 @@ export default function ProductDetailPage() {
             </p>
           )}
 
-          {/* Sélection variante */}
+          {/* Selection variante */}
           {activeVariants.length > 1 && (
             <div className="mt-6">
               <h3 className="text-sm font-semibold text-stone-900 mb-2">
