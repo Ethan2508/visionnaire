@@ -347,6 +347,7 @@ export default function ProductDetailPage() {
                   lensType: null,
                   lensOptions: [],
                   prescriptionUrl: null,
+                  prescriptionData: null,
                 });
                 setAddedToCart(true);
                 setTimeout(() => setAddedToCart(false), 2000);
