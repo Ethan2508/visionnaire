@@ -1,6 +1,21 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export interface EyeCorrection {
+  sph: string;
+  cyl: string;
+  axe: string;
+  add: string;
+}
+
+export interface PrescriptionData {
+  method: "none" | "manual" | "upload";
+  visionType: "unifocal" | "progressif" | null;
+  od: EyeCorrection | null;
+  og: EyeCorrection | null;
+  pupillaryDistance: string;
+}
+
 export interface CartItem {
   variantId: string;
   productId: string;
@@ -18,6 +33,7 @@ export interface CartItem {
   lensType: string | null;
   lensOptions: { id: string; name: string; price: number }[];
   prescriptionUrl: string | null;
+  prescriptionData: PrescriptionData | null;
 }
 
 interface CartStore {
