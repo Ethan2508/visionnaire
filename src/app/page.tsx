@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { createClient } from "@supabase/supabase-js";
 import {
   ArrowRight,
   CalendarDays,
@@ -23,13 +24,13 @@ const categories = [
   {
     title: "Solaire Femme",
     subtitle: "Élégance et protection",
-    image: "/images/hero/collection-femme.jpg",
+    image: "/images/hero/collection-femme.webp",
     href: "/catalogue?categorie=soleil&genre=femme",
   },
   {
     title: "Solaire Homme",
     subtitle: "Style et performance",
-    image: "/images/hero/collection-homme.jpg",
+    image: "/images/hero/collection-homme.webp",
     href: "/catalogue?categorie=soleil&genre=homme",
   },
   {
@@ -41,7 +42,7 @@ const categories = [
   {
     title: "Optique Homme",
     subtitle: "Précision et caractère",
-    image: "/images/hero/lunettes-vue-homme.png",
+    image: "/images/hero/lunettes-vue-homme.webp",
     href: "/catalogue?categorie=vue&genre=homme",
   },
 ];
@@ -102,7 +103,7 @@ const articles = [
     excerpt:
       "Le choix d'une monture dépend de la morphologie du visage. Découvrez nos conseils d'expert pour trouver la paire parfaite.",
     category: "Conseils",
-    image: "/images/hero/collection-femme.jpg",
+    image: "/images/hero/collection-femme.webp",
     href: "/blog",
   },
   {
@@ -110,7 +111,7 @@ const articles = [
     excerpt:
       "La neige réfléchit jusqu'à 80% des UV. Nos opticiens vous expliquent pourquoi les lunettes de soleil sont essentielles toute l'année.",
     category: "Santé visuelle",
-    image: "/images/hero/collection-homme.jpg",
+    image: "/images/hero/collection-homme.webp",
     href: "/blog",
   },
   {
@@ -118,7 +119,7 @@ const articles = [
     excerpt:
       "Montures oversize, acétate coloré, métal précieux... Tour d'horizon des tendances qui marqueront cette année.",
     category: "Tendances",
-    image: "/images/hero/fred.jpg",
+    image: "/images/hero/fred.webp",
     href: "/blog",
   },
 ];
@@ -153,7 +154,45 @@ const faqItems = [
 
 /* ─── Page Component ─── */
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Pre-fetch featured products server-side to avoid client waterfall
+  let initialProducts = [];
+  let initialType = "featured";
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: featured } = await supabase
+      .from("products")
+      .select(
+        "id, name, slug, base_price, category, gender, brand_id, brands(name, slug), product_images(url, alt_text, is_primary)"
+      )
+      .eq("is_active", true)
+      .eq("is_featured", true)
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    if (featured && featured.length > 0) {
+      initialProducts = featured;
+      initialType = "featured";
+    } else {
+      const { data: latest } = await supabase
+        .from("products")
+        .select(
+          "id, name, slug, base_price, category, gender, brand_id, brands(name, slug), product_images(url, alt_text, is_primary)"
+        )
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(8);
+      initialProducts = latest || [];
+      initialType = "latest";
+    }
+  } catch {
+    // Fail silently — client will fetch as fallback
+  }
+
   return (
     <div className="overflow-hidden">
       {/* ═══════════════════════════════════════════
@@ -163,7 +202,7 @@ export default function HomePage() {
         {/* Background image with slow zoom */}
         <div className="absolute inset-0 animate-slow-zoom">
           <Image
-            src="/images/hero/collection-femme.jpg"
+            src="/images/hero/collection-femme.webp"
             alt="Collection Visionnaire Opticiens"
             fill
             sizes="100vw"
@@ -286,6 +325,7 @@ export default function HomePage() {
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/80 transition-all duration-500" />
                 <div className="absolute bottom-0 left-0 right-0 p-8 md:p-10">
@@ -314,11 +354,12 @@ export default function HomePage() {
           <AnimatedSection direction="left" className="relative">
             <div className="absolute inset-0">
               <Image
-                src="/images/hero/fred.jpg"
+                src="/images/hero/fred.webp"
                 alt="Collection Fred"
                 fill
                 sizes="50vw"
                 className="object-cover"
+                loading="lazy"
               />
             </div>
           </AnimatedSection>
@@ -390,11 +431,12 @@ export default function HomePage() {
           >
             <div className="absolute inset-0">
               <Image
-                src="/images/hero/collection-homme.jpg"
+                src="/images/hero/collection-homme.webp"
                 alt="Collection Palm Angels"
                 fill
                 sizes="50vw"
                 className="object-cover"
+                loading="lazy"
               />
             </div>
           </AnimatedSection>
@@ -404,7 +446,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════
           5. FEATURED / RECOMMENDED PRODUCTS (Client Component)
       ═══════════════════════════════════════════ */}
-      <FeaturedProducts />
+      <FeaturedProducts initialProducts={initialProducts} initialType={initialType} />
 
       {/* ═══════════════════════════════════════════
           6. EXPERTISE — L'art de l'optique
@@ -524,11 +566,12 @@ export default function HomePage() {
       <section className="relative min-h-[500px] overflow-hidden">
         <div className="absolute inset-0">
           <Image
-            src="/images/hero/fred.jpg"
+            src="/images/hero/fred.webp"
             alt=""
             fill
             sizes="100vw"
             className="object-cover"
+            loading="lazy"
           />
           <div className="absolute inset-0 bg-black/65" />
         </div>
@@ -602,6 +645,7 @@ export default function HomePage() {
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <div className="mt-5">

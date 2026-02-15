@@ -48,7 +48,7 @@ const megaMenuData: Record<
       },
     ],
     featured: {
-      image: "/images/hero/collection-femme.jpg",
+      image: "/images/hero/collection-femme.webp",
       title: "Collection Solaire",
       href: "/catalogue?categorie=soleil",
     },

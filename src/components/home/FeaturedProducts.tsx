@@ -24,12 +24,25 @@ interface FeaturedProduct {
   product_images: ProductImage[];
 }
 
-export default function FeaturedProducts() {
-  const [products, setProducts] = useState<FeaturedProduct[]>([]);
-  const [type, setType] = useState<string>("featured");
-  const [loading, setLoading] = useState(true);
+interface FeaturedProductsProps {
+  initialProducts?: FeaturedProduct[];
+  initialType?: string;
+}
 
+export default function FeaturedProducts({
+  initialProducts,
+  initialType = "featured",
+}: FeaturedProductsProps) {
+  const [products, setProducts] = useState<FeaturedProduct[]>(
+    initialProducts || []
+  );
+  const [type, setType] = useState<string>(initialType);
+  const [loading, setLoading] = useState(!initialProducts);
+
+  // Only fetch client-side if no initial data (shouldn't happen) or for personalization
   useEffect(() => {
+    if (initialProducts && initialProducts.length > 0) return;
+
     async function load() {
       try {
         const res = await fetch("/api/products/featured");
@@ -43,7 +56,7 @@ export default function FeaturedProducts() {
       }
     }
     load();
-  }, []);
+  }, [initialProducts]);
 
   if (loading) {
     return (

@@ -2,6 +2,31 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
+/* ── Shared IntersectionObserver (singleton) ── */
+const callbacks = new Map<Element, (isIntersecting: boolean) => void>();
+let sharedObserver: IntersectionObserver | null = null;
+
+function getObserver() {
+  if (sharedObserver) return sharedObserver;
+  if (typeof window === "undefined") return null;
+
+  sharedObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const cb = callbacks.get(entry.target);
+        if (cb && entry.isIntersecting) {
+          cb(true);
+          sharedObserver?.unobserve(entry.target);
+          callbacks.delete(entry.target);
+        }
+      });
+    },
+    { threshold: 0.1, rootMargin: "0px 0px -60px 0px" }
+  );
+
+  return sharedObserver;
+}
+
 interface AnimatedSectionProps {
   children: ReactNode;
   className?: string;
@@ -20,20 +45,18 @@ export default function AnimatedSection({
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    const observer = getObserver();
+    if (!el || !observer) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setIsVisible(true), delay);
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -60px 0px" }
-    );
-
+    callbacks.set(el, () => {
+      setTimeout(() => setIsVisible(true), delay);
+    });
     observer.observe(el);
-    return () => observer.disconnect();
+
+    return () => {
+      observer.unobserve(el);
+      callbacks.delete(el);
+    };
   }, [delay]);
 
   const directionClass = {
