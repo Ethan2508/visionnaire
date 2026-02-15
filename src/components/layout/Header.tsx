@@ -222,7 +222,7 @@ export default function Header() {
           } ${headerBg}`}
         >
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-            <div className="flex items-center justify-between h-20">
+            <div className="flex items-center justify-between h-16 lg:h-20">
               {/* Left: Logo */}
               <Link href="/" className="shrink-0">
                 <Image
@@ -230,7 +230,7 @@ export default function Header() {
                   alt="Visionnaires Opticiens"
                   width={336}
                   height={77}
-                  className="h-[50px] w-auto"
+                  className="h-[35px] sm:h-[42px] lg:h-[50px] w-auto"
                   priority
                 />
               </Link>
@@ -280,29 +280,29 @@ export default function Header() {
               </nav>
 
               {/* Right: Actions */}
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-0">
                 <button
                   onClick={() => setSearchOpen(!searchOpen)}
-                  className={`p-2.5 ${iconColor} transition-colors`}
+                  className={`p-2 lg:p-2.5 ${iconColor} transition-colors`}
                   aria-label="Rechercher"
                 >
-                  <Search size={22} />
+                  <Search size={20} className="lg:w-[22px] lg:h-[22px]" />
                 </button>
 
                 <Link
                   href={user ? "/compte" : "/auth/login"}
-                  className={`p-2.5 ${iconColor} transition-colors`}
+                  className={`p-2 lg:p-2.5 ${iconColor} transition-colors`}
                   aria-label="Mon compte"
                 >
-                  <User size={22} />
+                  <User size={20} className="lg:w-[22px] lg:h-[22px]" />
                 </Link>
 
                 <Link
                   href="/panier"
-                  className={`p-2.5 ${iconColor} transition-colors relative`}
+                  className={`p-2 lg:p-2.5 ${iconColor} transition-colors relative`}
                   aria-label="Panier"
                 >
-                  <ShoppingBag size={22} />
+                  <ShoppingBag size={20} className="lg:w-[22px] lg:h-[22px]" />
                   {cartCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 bg-stone-900 text-white text-[10px] font-bold w-[18px] h-[18px] flex items-center justify-center rounded-full leading-none">
                       {cartCount > 9 ? "9+" : cartCount}
@@ -326,10 +326,10 @@ export default function Header() {
                 {/* Hamburger — mobile only */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className={`lg:hidden p-2.5 ml-1 ${iconColor} transition-colors`}
+                  className={`lg:hidden p-2 ml-0.5 ${iconColor} transition-colors`}
                   aria-label="Menu"
                 >
-                  <Menu size={24} />
+                  <Menu size={22} />
                 </button>
               </div>
             </div>
@@ -444,13 +444,13 @@ export default function Header() {
           {/* Panel */}
           <div className="absolute inset-y-0 left-0 w-full max-w-sm bg-white overflow-y-auto shadow-2xl">
             {/* Mobile header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-stone-100">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
               <Image
                 src="/logos/logo-dark.png"
                 alt="Visionnaires Opticiens"
-                width={180}
-                height={40}
-                className="h-8 w-auto"
+                width={150}
+                height={34}
+                className="h-7 w-auto"
               />
               <button
                 onClick={() => setMobileMenuOpen(false)}
