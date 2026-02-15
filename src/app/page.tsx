@@ -156,7 +156,8 @@ const faqItems = [
 
 export default async function HomePage() {
   // Pre-fetch featured products server-side to avoid client waterfall
-  let initialProducts = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let initialProducts: any[] = [];
   let initialType = "featured";
   try {
     const supabase = createClient(
