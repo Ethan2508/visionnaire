@@ -14,7 +14,6 @@ interface ProductCardProps {
   images?: { url: string; is_primary?: boolean }[];
   imageUrl?: string; // fallback si pas d'images[]
   category: string;
-  requiresPrescription: boolean;
 }
 
 export default function ProductCard({
@@ -26,7 +25,6 @@ export default function ProductCard({
   images,
   imageUrl,
   category,
-  requiresPrescription,
 }: ProductCardProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -137,11 +135,6 @@ export default function ProductCard({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
-        )}
-        {requiresPrescription && (
-          <span className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-medium px-2 py-0.5 rounded-full z-10">
-            Verres correcteurs
-          </span>
         )}
       </div>
       <div className="p-4">

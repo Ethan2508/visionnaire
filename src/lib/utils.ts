@@ -39,10 +39,7 @@ export function orderStatusLabel(status: string): string {
   const labels: Record<string, string> = {
     en_attente_paiement: "En attente de paiement",
     payee: "Payée",
-    ordonnance_en_validation: "Ordonnance en validation",
-    ordonnance_validee: "Ordonnance validée",
-    ordonnance_refusee: "Ordonnance refusée",
-    en_fabrication: "En fabrication",
+    en_preparation: "En préparation",
     expediee: "Expédiée",
     prete_en_boutique: "Prête en boutique",
     livree: "Livrée",

@@ -42,7 +42,6 @@ interface ProductData {
   base_price: string;
   is_active: boolean;
   is_featured: boolean;
-  requires_prescription: boolean;
   frame_shape: string;
   frame_material: string;
   frame_color: string;
@@ -77,7 +76,6 @@ export default function ProductForm({ productId }: { productId?: string }) {
     base_price: "",
     is_active: true,
     is_featured: false,
-    requires_prescription: false,
     frame_shape: "",
     frame_material: "",
     frame_color: "",
@@ -125,7 +123,6 @@ export default function ProductForm({ productId }: { productId?: string }) {
         base_price: String(p.base_price),
         is_active: p.is_active,
         is_featured: p.is_featured,
-        requires_prescription: p.requires_prescription,
         frame_shape: p.frame_shape || "",
         frame_material: p.frame_material || "",
         frame_color: p.frame_color || "",
@@ -181,9 +178,6 @@ export default function ProductForm({ productId }: { productId?: string }) {
       const updated = { ...prev, [field]: value };
       if (field === "name" && !productId) {
         updated.slug = slugify(value as string);
-      }
-      if (field === "category") {
-        updated.requires_prescription = value === "vue";
       }
       return updated;
     });
@@ -279,7 +273,6 @@ export default function ProductForm({ productId }: { productId?: string }) {
       base_price: parseFloat(product.base_price),
       is_active: product.is_active,
       is_featured: product.is_featured,
-      requires_prescription: product.requires_prescription,
       frame_shape: product.frame_shape || null,
       frame_material: product.frame_material || null,
       frame_color: product.frame_color || null,
@@ -636,15 +629,6 @@ export default function ProductForm({ productId }: { productId?: string }) {
               className="rounded border-stone-300"
             />
             <span className="text-sm text-stone-700">Mettre en avant</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={product.requires_prescription}
-              onChange={(e) => updateProduct("requires_prescription", e.target.checked)}
-              className="rounded border-stone-300"
-            />
-            <span className="text-sm text-stone-700">Necessite une ordonnance</span>
           </label>
         </div>
       </div>

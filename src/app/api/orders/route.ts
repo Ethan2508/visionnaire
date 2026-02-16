@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse } from "next/server";
-import type { OrderStatus, DeliveryMethod, PaymentMethod, LensType } from "@/types/database";
+import type { OrderStatus, DeliveryMethod, PaymentMethod } from "@/types/database";
 
 interface OrderInsert {
   order_number: string;
@@ -29,11 +29,6 @@ interface OrderItemInsert {
   variant_info: string | null;
   quantity: number;
   unit_price: number;
-  lens_type: LensType | null;
-  lens_options_summary: string | null;
-  lens_options_price: number;
-  prescription_url: string | null;
-  prescription_data: Record<string, unknown> | null;
 }
 
 export async function POST(request: Request) {
@@ -89,8 +84,7 @@ export async function POST(request: Request) {
 
     const v = variant as unknown as { price_override: number | null; products: { base_price: number } | null };
     const unitPrice = Number(v.price_override ?? v.products?.base_price ?? 0);
-    const lensPrice = item.lensOptions?.reduce((sum: number, opt: { price: number }) => sum + opt.price, 0) || 0;
-    const itemTotal = (unitPrice + lensPrice) * item.quantity;
+    const itemTotal = unitPrice * item.quantity;
     subtotal += itemTotal;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -100,12 +94,7 @@ export async function POST(request: Request) {
       variant_info: `${item.colorName}${item.size ? ` - ${item.size}` : ""}`,
       quantity: item.quantity,
       unit_price: unitPrice,
-      lens_type: item.lensType || null,
-      lens_options_summary: item.lensOptions?.map((o: { name: string }) => o.name).join(", ") || null,
-      lens_options_price: lensPrice || 0,
-      prescription_url: item.prescriptionUrl || null,
     };
-    if (item.prescriptionData) orderItem.prescription_data = item.prescriptionData;
     orderItems.push(orderItem);
   }
 
@@ -203,6 +192,45 @@ export async function POST(request: Request) {
     status: "en_attente_paiement",
     comment: "Commande créée",
   } as never);
+
+  // Sauvegarder l'adresse de livraison dans le profil si livraison à domicile
+  if (deliveryMethod === "domicile" && shippingAddress) {
+    try {
+      // Vérifier si une adresse identique existe déjà
+      const { data: existingAddresses } = await supabase
+        .from("addresses")
+        .select("id")
+        .eq("profile_id", user.id)
+        .eq("street", shippingAddress.street || "")
+        .eq("postal_code", shippingAddress.postalCode || "")
+        .eq("city", shippingAddress.city || "")
+        .limit(1);
+
+      if (!existingAddresses || existingAddresses.length === 0) {
+        // Vérifier s'il y a déjà des adresses (pour is_default)
+        const { count: addrCount } = await supabase
+          .from("addresses")
+          .select("*", { count: "exact", head: true })
+          .eq("profile_id", user.id);
+
+        await supabase.from("addresses").insert({
+          profile_id: user.id,
+          label: "Livraison",
+          first_name: shippingAddress.firstName || "",
+          last_name: shippingAddress.lastName || "",
+          street: shippingAddress.street || "",
+          street_2: shippingAddress.street2 || null,
+          city: shippingAddress.city || "",
+          postal_code: shippingAddress.postalCode || "",
+          country: shippingAddress.country || "France",
+          is_default: (addrCount || 0) === 0,
+        } as never);
+      }
+    } catch (e) {
+      // Non-bloquant : on ne veut pas que l'erreur d'adresse bloque la commande
+      console.error("[ORDER] Error saving address:", e);
+    }
+  }
 
   const response = NextResponse.json({
     success: true,

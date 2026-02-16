@@ -22,7 +22,7 @@ type Step = "livraison" | "paiement" | "confirmation";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, getTotal, getLensTotal, getSubtotal, getItemCount, clearCart } =
+  const { items, getTotal, getSubtotal, getItemCount, clearCart } =
     useCartStore();
 
   const [mounted, setMounted] = useState(false);
@@ -77,7 +77,6 @@ export default function CheckoutPage() {
   }
 
   const subtotal = getSubtotal();
-  const lensTotal = getLensTotal();
   const total = getTotal();
   const shippingCost = deliveryMethod === "domicile" && total < 150 ? 6.9 : 0;
 
@@ -147,10 +146,6 @@ export default function CheckoutPage() {
             colorName: item.colorName,
             size: item.size,
             quantity: item.quantity,
-            lensType: item.lensType,
-            lensOptions: item.lensOptions,
-            prescriptionUrl: item.prescriptionUrl,
-            prescriptionData: item.prescriptionData,
           })),
           deliveryMethod,
           shippingAddress: deliveryMethod === "domicile" ? address : null,
@@ -587,14 +582,7 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                     <p className="font-medium text-stone-900 flex-shrink-0">
-                      {formatPrice(
-                        (item.price +
-                          item.lensOptions.reduce(
-                            (sum, opt) => sum + opt.price,
-                            0
-                          )) *
-                          item.quantity
-                      )}
+                      {formatPrice(item.price * item.quantity)}
                     </p>
                   </div>
                 ))}
@@ -639,7 +627,7 @@ export default function CheckoutPage() {
 
                 <div className="flex justify-between text-stone-600">
                   <span>Sous-total</span>
-                  <span>{formatPrice(subtotal + lensTotal)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-green-600">

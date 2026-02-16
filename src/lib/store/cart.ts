@@ -1,21 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export interface EyeCorrection {
-  sph: string;
-  cyl: string;
-  axe: string;
-  add: string;
-}
-
-export interface PrescriptionData {
-  method: "none" | "manual" | "upload";
-  visionType: "unifocal" | "progressif" | null;
-  od: EyeCorrection | null;
-  og: EyeCorrection | null;
-  pupillaryDistance: string;
-}
-
 export interface CartItem {
   variantId: string;
   productId: string;
@@ -27,13 +12,7 @@ export interface CartItem {
   imageUrl: string | null;
   price: number;
   quantity: number;
-  requiresPrescription: boolean;
   category: string;
-  // Options verres
-  lensType: string | null;
-  lensOptions: { id: string; name: string; price: number }[];
-  prescriptionUrl: string | null;
-  prescriptionData: PrescriptionData | null;
 }
 
 interface CartStore {
@@ -44,7 +23,6 @@ interface CartStore {
   clearCart: () => void;
   getItemCount: () => number;
   getSubtotal: () => number;
-  getLensTotal: () => number;
   getTotal: () => number;
 }
 
@@ -56,7 +34,7 @@ export const useCartStore = create<CartStore>()(
       addItem: (item) => {
         set((state) => {
           const existingIndex = state.items.findIndex(
-            (i) => i.variantId === item.variantId && i.lensType === item.lensType
+            (i) => i.variantId === item.variantId
           );
 
           if (existingIndex > -1) {
@@ -97,15 +75,8 @@ export const useCartStore = create<CartStore>()(
         );
       },
 
-      getLensTotal: () => {
-        return get().items.reduce((acc, item) => {
-          const lensPrice = item.lensOptions.reduce((sum, opt) => sum + opt.price, 0);
-          return acc + lensPrice * item.quantity;
-        }, 0);
-      },
-
       getTotal: () => {
-        return get().getSubtotal() + get().getLensTotal();
+        return get().getSubtotal();
       },
     }),
     {

@@ -51,10 +51,7 @@ interface Address {
 const statusLabels: Record<string, { label: string; color: string }> = {
   en_attente_paiement: { label: "En attente de paiement", color: "bg-yellow-100 text-yellow-800" },
   payee: { label: "Payée", color: "bg-blue-100 text-blue-800" },
-  ordonnance_en_validation: { label: "Ordonnance en validation", color: "bg-orange-100 text-orange-800" },
-  ordonnance_validee: { label: "Ordonnance validée", color: "bg-green-100 text-green-800" },
-  ordonnance_refusee: { label: "Ordonnance refusée", color: "bg-red-100 text-red-800" },
-  en_fabrication: { label: "En fabrication", color: "bg-indigo-100 text-indigo-800" },
+  en_preparation: { label: "En préparation", color: "bg-indigo-100 text-indigo-800" },
   expediee: { label: "Expédiée", color: "bg-purple-100 text-purple-800" },
   prete_en_boutique: { label: "Prête en boutique", color: "bg-teal-100 text-teal-800" },
   livree: { label: "Livrée", color: "bg-green-100 text-green-800" },
@@ -369,9 +366,10 @@ export default function ComptePage() {
                   color: "bg-stone-100 text-stone-600",
                 };
                 return (
-                  <div
+                  <Link
                     key={order.id}
-                    className="bg-white rounded-xl border border-stone-200 p-5 hover:border-stone-300 transition-colors"
+                    href={`/compte/commandes/${order.id}`}
+                    className="bg-white rounded-xl border border-stone-200 p-5 hover:border-stone-300 transition-colors block"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -404,7 +402,7 @@ export default function ComptePage() {
                         />
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 );
               })
             )}

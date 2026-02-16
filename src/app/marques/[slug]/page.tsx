@@ -21,7 +21,6 @@ interface Product {
   slug: string;
   category: string;
   base_price: number;
-  requires_prescription: boolean;
   brands: { name: string } | null;
   product_images: { url: string; is_primary: boolean }[];
   product_variants: { price_override: number | null; is_active: boolean }[];
@@ -52,7 +51,7 @@ export default function BrandDetailPage() {
         // Charger les produits de cette marque
         const { data: productsData } = (await supabase
           .from("products")
-          .select("id, name, slug, category, base_price, requires_prescription, brands(name), product_images(url, is_primary), product_variants(price_override, is_active)")
+          .select("id, name, slug, category, base_price, brands(name), product_images(url, is_primary), product_variants(price_override, is_active)")
           .eq("brand_id", brandData.id)
           .eq("is_active", true)
           .order("created_at", { ascending: false })) as { data: Product[] | null };
@@ -144,7 +143,6 @@ export default function BrandDetailPage() {
                 compareAtPrice={compareAt}
                 images={product.product_images}
                 category={product.category}
-                requiresPrescription={product.requires_prescription}
               />
               );
           })}

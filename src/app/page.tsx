@@ -60,8 +60,8 @@ const reassurance = [
   },
   {
     icon: ShieldCheck,
-    title: "Ordonnance vérifiée",
-    description: "Par votre opticien diplômé",
+    title: "Qualité certifiée",
+    description: "Montures authentiques garanties",
   },
   {
     icon: Award,
@@ -131,14 +131,14 @@ const faqItems = [
       "Les visages ronds s'accordent avec des montures anguleuses, les visages carrés avec des formes arrondies. Les visages ovales peuvent porter presque tous les styles. Nos opticiens vous accompagnent en boutique pour trouver la monture qui met le mieux en valeur vos traits.",
   },
   {
-    question: "Acceptez-vous les ordonnances d'ophtalmologistes ?",
+    question: "Acceptez-vous les retours et échanges ?",
     answer:
-      "Oui, nous acceptons toutes les ordonnances valides d'ophtalmologistes. Vous pouvez nous transmettre votre ordonnance lors de votre commande en ligne ou directement en boutique. Nos opticiens diplômés vérifient chaque ordonnance.",
+      "Oui, vous disposez de 30 jours après réception pour retourner ou échanger votre monture. L'article doit être dans son état d'origine avec tous ses accessoires.",
   },
   {
-    question: "Quels sont les délais de fabrication des verres ?",
+    question: "Quels sont les délais de livraison ?",
     answer:
-      "Les verres unifocaux sont généralement prêts sous 5 à 7 jours ouvrés. Pour les verres progressifs ou les corrections complexes, comptez 10 à 14 jours ouvrés. Nous vous tenons informé à chaque étape.",
+      "Les commandes sont expédiées sous 24 à 48h. Comptez ensuite 2 à 4 jours ouvrés pour la livraison à domicile. La livraison est offerte dès 150€ d'achat.",
   },
   {
     question: "Proposez-vous le paiement en plusieurs fois ?",

@@ -10,29 +10,12 @@ import {
   Package,
   Truck,
   CreditCard,
-  FileText,
   CheckCircle,
   XCircle,
   Clock,
   MapPin,
   User,
-  ExternalLink,
 } from "lucide-react";
-
-interface EyeCorrection {
-  sph: string;
-  cyl: string;
-  axe: string;
-  add: string;
-}
-
-interface PrescriptionData {
-  method: string;
-  visionType: string;
-  od: EyeCorrection;
-  og: EyeCorrection;
-  pupillaryDistance: string;
-}
 
 interface OrderItem {
   id: string;
@@ -43,9 +26,6 @@ interface OrderItem {
   lens_type: string | null;
   lens_options_summary: string | null;
   lens_options_price: number | null;
-  prescription_url: string | null;
-  prescription_validated: boolean | null;
-  prescription_data: PrescriptionData | null;
 }
 
 interface StatusHistory {
@@ -82,10 +62,7 @@ interface Order {
 const statusColors: Record<string, string> = {
   en_attente_paiement: "bg-yellow-100 text-yellow-800",
   payee: "bg-blue-100 text-blue-800",
-  ordonnance_en_validation: "bg-orange-100 text-orange-800",
-  ordonnance_validee: "bg-green-100 text-green-800",
-  ordonnance_refusee: "bg-red-100 text-red-800",
-  en_fabrication: "bg-indigo-100 text-indigo-800",
+  en_preparation: "bg-indigo-100 text-indigo-800",
   expediee: "bg-purple-100 text-purple-800",
   prete_en_boutique: "bg-teal-100 text-teal-800",
   livree: "bg-emerald-100 text-emerald-800",
@@ -95,11 +72,8 @@ const statusColors: Record<string, string> = {
 // Statuts possibles selon le statut actuel
 const nextStatuses: Record<string, string[]> = {
   en_attente_paiement: ["payee", "annulee"],
-  payee: ["ordonnance_en_validation", "en_fabrication", "annulee"],
-  ordonnance_en_validation: ["ordonnance_validee", "ordonnance_refusee"],
-  ordonnance_validee: ["en_fabrication"],
-  ordonnance_refusee: ["ordonnance_en_validation", "annulee"],
-  en_fabrication: ["expediee", "prete_en_boutique"],
+  payee: ["en_preparation", "annulee"],
+  en_preparation: ["expediee", "prete_en_boutique"],
   expediee: ["livree"],
   prete_en_boutique: ["livree"],
   livree: [],
@@ -183,25 +157,37 @@ export default function AdminOrderDetailPage() {
   }
 
   async function validatePrescription(itemId: string, validated: boolean) {
-    const supabase = createClient();
-    await supabase
-      .from("order_items")
-      .update({ prescription_validated: validated } as never)
-      .eq("id", itemId);
-
-    await loadOrder();
+    // Removed - prescriptions no longer used
   }
 
   async function saveOrderDetails() {
     if (!order) return;
     const supabase = createClient();
+
+    // Si un numéro de suivi est ajouté, passer automatiquement en "expédiée"
+    const updates: Record<string, unknown> = {
+      tracking_number: trackingNumber || null,
+      notes: notes || null,
+    };
+
     await supabase
       .from("orders")
-      .update({
-        tracking_number: trackingNumber || null,
-        notes: notes || null,
-      } as never)
+      .update(updates as never)
       .eq("id", order.id);
+
+    // Auto-expédié quand un tracking number est ajouté et que le statut est en_preparation ou payee
+    if (trackingNumber && !order.tracking_number && ["payee", "en_preparation"].includes(order.status)) {
+      await supabase
+        .from("orders")
+        .update({ status: "expediee" } as never)
+        .eq("id", order.id);
+
+      await supabase.from("order_status_history").insert({
+        order_id: order.id,
+        status: "expediee",
+        comment: `Numéro de suivi ajouté : ${trackingNumber}`,
+      } as never);
+    }
 
     await loadOrder();
   }
@@ -226,7 +212,6 @@ export default function AdminOrderDetailPage() {
     );
   }
 
-  const hasPrescription = order.order_items.some((item) => item.prescription_url);
   const available = nextStatuses[order.status] || [];
 
   return (
@@ -286,78 +271,6 @@ export default function AdminOrderDetailPage() {
                     </div>
                   </div>
 
-                  {/* Corrections manuelles */}
-                  {item.prescription_data && item.prescription_data.od && item.prescription_data.og && (
-                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                      <p className="text-xs font-medium text-blue-800 mb-2 flex items-center gap-1">
-                        <FileText size={14} />
-                        Corrections saisies ({item.prescription_data.visionType === 'simple' ? 'Vision simple' : item.prescription_data.visionType === 'progressive' ? 'Progressive' : item.prescription_data.visionType})
-                      </p>
-                      <div className="grid grid-cols-2 gap-3">
-                        {(['od', 'og'] as const).map((eye) => (
-                          <div key={eye} className="text-xs">
-                            <p className="font-semibold text-blue-900 mb-1">{eye === 'od' ? 'Œil droit (OD)' : 'Œil gauche (OG)'}</p>
-                            <div className="grid grid-cols-2 gap-1 text-blue-700">
-                              <span>SPH: {item.prescription_data?.[eye]?.sph || '—'}</span>
-                              <span>CYL: {item.prescription_data?.[eye]?.cyl || '—'}</span>
-                              <span>AXE: {item.prescription_data?.[eye]?.axe || '—'}</span>
-                              <span>ADD: {item.prescription_data?.[eye]?.add || '—'}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {item.prescription_data.pupillaryDistance && (
-                        <p className="text-xs text-blue-600 mt-2">Écart pupillaire : {item.prescription_data.pupillaryDistance} mm</p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Ordonnance */}
-                  {item.prescription_url && (
-                    <div className="mt-3 p-3 bg-stone-50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <FileText size={14} className="text-stone-500" />
-                          <span className="text-xs font-medium text-stone-700">Ordonnance</span>
-                          {item.prescription_validated === true && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Validée</span>
-                          )}
-                          {item.prescription_validated === false && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">Refusée</span>
-                          )}
-                          {item.prescription_validated === null && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium">En attente</span>
-                          )}
-                        </div>
-                        <a
-                          href={item.prescription_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-                        >
-                          Voir <ExternalLink size={12} />
-                        </a>
-                      </div>
-                      {item.prescription_validated === null && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <button
-                            onClick={() => validatePrescription(item.id, true)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors"
-                          >
-                            <CheckCircle size={12} />
-                            Valider
-                          </button>
-                          <button
-                            onClick={() => validatePrescription(item.id, false)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors"
-                          >
-                            <XCircle size={12} />
-                            Refuser
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

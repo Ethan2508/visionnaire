@@ -12,8 +12,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: {
   onUpdateQuantity: (variantId: string, qty: number) => void;
   onRemove: (variantId: string) => void;
 }) {
-  const lensTotal = item.lensOptions.reduce((sum, opt) => sum + opt.price, 0);
-  const itemTotal = (item.price + lensTotal) * item.quantity;
+  const itemTotal = item.price * item.quantity;
 
   return (
     <div className="flex gap-4 py-6 border-b border-stone-100 last:border-b-0">
@@ -61,16 +60,6 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: {
           </button>
         </div>
 
-        {/* Options verres */}
-        {item.lensType && (
-          <div className="mt-2 text-xs text-stone-500 space-y-0.5">
-            <p>Verres : {item.lensType}</p>
-            {item.lensOptions.length > 0 && (
-              <p>Options : {item.lensOptions.map(o => o.name).join(", ")}</p>
-            )}
-          </div>
-        )}
-
         {/* Quantité & prix */}
         <div className="mt-3 flex items-center justify-between">
           <div className="flex items-center border border-stone-200 rounded-lg">
@@ -95,7 +84,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: {
             </p>
             {item.quantity > 1 && (
               <p className="text-xs text-stone-400">
-                {formatPrice(item.price + lensTotal)} / pièce
+                {formatPrice(item.price)} / pièce
               </p>
             )}
           </div>
@@ -106,7 +95,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: {
 }
 
 export default function PanierPage() {
-  const { items, removeItem, updateQuantity, getSubtotal, getLensTotal, getTotal, getItemCount } = useCartStore();
+  const { items, removeItem, updateQuantity, getSubtotal, getTotal, getItemCount } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -150,7 +139,6 @@ export default function PanierPage() {
   }
 
   const subtotal = getSubtotal();
-  const lensTotal = getLensTotal();
   const total = getTotal();
   const itemCount = getItemCount();
   const shippingCost = total < 150 ? 6.90 : 0;
@@ -198,15 +186,9 @@ export default function PanierPage() {
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between text-stone-600">
-                  <span>Sous-total montures</span>
+                  <span>Sous-total</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
-                {lensTotal > 0 && (
-                  <div className="flex justify-between text-stone-600">
-                    <span>Options verres</span>
-                    <span>{formatPrice(lensTotal)}</span>
-                  </div>
-                )}
                 <div className="flex justify-between text-stone-600">
                   <span>Livraison</span>
                   <span>
@@ -237,7 +219,7 @@ export default function PanierPage() {
               </Link>
 
               <p className="text-xs text-stone-400 text-center mt-3">
-                Paiement sécurisé par Stripe
+                Paiement sécurisé par Alma
               </p>
             </div>
           </div>

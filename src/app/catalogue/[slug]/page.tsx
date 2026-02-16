@@ -35,7 +35,6 @@ interface Product {
   category: string;
   gender: string;
   base_price: number;
-  requires_prescription: boolean;
   frame_shape: string | null;
   frame_material: string | null;
   frame_color: string | null;
@@ -295,12 +294,6 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {product.requires_prescription && (
-            <p className="text-sm text-blue-600 font-medium mt-1">
-              + prix des verres correcteurs selon vos besoins
-            </p>
-          )}
-
           {/* Selection variante */}
           {activeVariants.length > 1 && (
             <div className="mt-6">
@@ -335,15 +328,7 @@ export default function ProductDetailPage() {
           )}
 
           {/* Bouton panier */}
-          {product.requires_prescription ? (
-            <Link
-              href={`/catalogue/${slug}/configurer`}
-              className="inline-flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-stone-800 transition-colors mt-6 w-full justify-center"
-            >
-              Configurer mes verres
-            </Link>
-          ) : (
-            <button
+          <button
               onClick={() => {
                 if (!selectedVariant || !product) return;
                 const primaryImg = product.product_images.find((img) => img.is_primary);
@@ -358,12 +343,7 @@ export default function ProductDetailPage() {
                   imageUrl: primaryImg?.url || product.product_images[0]?.url || null,
                   price: selectedVariant.price_override ?? product.base_price,
                   quantity: 1,
-                  requiresPrescription: false,
                   category: product.category,
-                  lensType: null,
-                  lensOptions: [],
-                  prescriptionUrl: null,
-                  prescriptionData: null,
                 });
                 setAddedToCart(true);
                 setTimeout(() => setAddedToCart(false), 2000);
@@ -383,7 +363,6 @@ export default function ProductDetailPage() {
                 </>
               )}
             </button>
-          )}
 
           {/* Description */}
           {product.description && (

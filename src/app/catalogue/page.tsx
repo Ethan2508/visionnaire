@@ -14,7 +14,6 @@ interface Product {
   category: string;
   gender: string;
   base_price: number;
-  requires_prescription: boolean;
   frame_shape: string | null;
   brands: { name: string } | null;
   product_images: { url: string; is_primary: boolean }[];
@@ -60,7 +59,7 @@ function CataloguePage() {
     // Construire la requete produits
     let query = supabase
       .from("products")
-      .select("id, name, slug, category, gender, base_price, requires_prescription, frame_shape, brands(name), product_images(url, is_primary), product_variants(price_override, is_active)")
+      .select("id, name, slug, category, gender, base_price, frame_shape, brands(name), product_images(url, is_primary), product_variants(price_override, is_active)")
       .eq("is_active", true);
 
     if (categoryFilter) {
@@ -291,7 +290,6 @@ function CataloguePage() {
                     compareAtPrice={compareAt}
                     images={product.product_images}
                     category={product.category}
-                    requiresPrescription={product.requires_prescription}
                   />
                   );
               })}

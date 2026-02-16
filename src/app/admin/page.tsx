@@ -14,7 +14,6 @@ import {
   Eye,
   ArrowRight,
   Clock,
-  FileText,
 } from "lucide-react";
 
 interface DashboardStats {
@@ -25,7 +24,6 @@ interface DashboardStats {
   totalClients: number;
   totalProducts: number;
   lowStockCount: number;
-  pendingPrescriptions: number;
   todayAppointments: number;
   recentOrders: {
     id: string;
@@ -40,10 +38,7 @@ interface DashboardStats {
 const statusColors: Record<string, string> = {
   en_attente_paiement: "bg-yellow-100 text-yellow-800",
   payee: "bg-blue-100 text-blue-800",
-  ordonnance_en_validation: "bg-orange-100 text-orange-800",
-  ordonnance_validee: "bg-green-100 text-green-800",
-  ordonnance_refusee: "bg-red-100 text-red-800",
-  en_fabrication: "bg-indigo-100 text-indigo-800",
+  en_preparation: "bg-indigo-100 text-indigo-800",
   expediee: "bg-purple-100 text-purple-800",
   prete_en_boutique: "bg-teal-100 text-teal-800",
   livree: "bg-emerald-100 text-emerald-800",
@@ -53,10 +48,7 @@ const statusColors: Record<string, string> = {
 const statusLabels: Record<string, string> = {
   en_attente_paiement: "En attente",
   payee: "Payée",
-  ordonnance_en_validation: "Ordonnance",
-  ordonnance_validee: "Validée",
-  ordonnance_refusee: "Refusée",
-  en_fabrication: "Fabrication",
+  en_preparation: "Préparation",
   expediee: "Expédiée",
   prete_en_boutique: "Prête",
   livree: "Livrée",
@@ -85,18 +77,16 @@ export default function AdminDashboard() {
       clientsRes,
       productsRes,
       lowStockRes,
-      prescRes,
       appointmentsRes,
       recentRes,
     ] = await Promise.all([
       supabase.from("orders").select("*", { count: "exact", head: true }),
-      supabase.from("orders").select("*", { count: "exact", head: true }).in("status", ["en_attente_paiement", "payee", "ordonnance_en_validation"]),
+      supabase.from("orders").select("*", { count: "exact", head: true }).in("status", ["en_attente_paiement", "payee"]),
       supabase.from("orders").select("total").not("status", "eq", "annulee"),
       supabase.from("orders").select("total").not("status", "eq", "annulee").gte("created_at", monthStart),
       supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "client"),
       supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", true),
       supabase.from("product_variants").select("*", { count: "exact", head: true }).lt("stock_quantity", 5).eq("is_active", true),
-      supabase.from("order_items").select("*", { count: "exact", head: true }).is("prescription_validated", null).not("prescription_url", "is", null),
       supabase.from("appointments").select("*, appointment_slots!inner(date)").eq("appointment_slots.date", today).eq("status", "confirmee"),
       supabase.from("orders").select("id, order_number, status, total, created_at, profiles(first_name, last_name, email)").order("created_at", { ascending: false }).limit(8),
     ]);
@@ -112,7 +102,6 @@ export default function AdminDashboard() {
       totalClients: clientsRes.count || 0,
       totalProducts: productsRes.count || 0,
       lowStockCount: lowStockRes.count || 0,
-      pendingPrescriptions: prescRes.count || 0,
       todayAppointments: (appointmentsRes.data || []).length,
       recentOrders: (recentRes.data as unknown as DashboardStats["recentOrders"]) || [],
     });
@@ -141,7 +130,6 @@ export default function AdminDashboard() {
   ];
 
   const alerts = [
-    stats.pendingPrescriptions > 0 && { label: `${stats.pendingPrescriptions} ordonnance${stats.pendingPrescriptions > 1 ? "s" : ""} à valider`, href: "/admin/commandes", icon: FileText, color: "text-orange-600 bg-orange-50 border-orange-200" },
     stats.lowStockCount > 0 && { label: `${stats.lowStockCount} variante${stats.lowStockCount > 1 ? "s" : ""} en stock faible (< 5)`, href: "/admin/produits", icon: AlertTriangle, color: "text-red-600 bg-red-50 border-red-200" },
   ].filter(Boolean) as { label: string; href: string; icon: typeof AlertTriangle; color: string }[];
 

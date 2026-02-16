@@ -20,10 +20,7 @@ interface Order {
 const statusLabels: Record<string, string> = {
   en_attente_paiement: "En attente de paiement",
   payee: "Payée",
-  ordonnance_en_validation: "Ordonnance en validation",
-  ordonnance_validee: "Ordonnance validée",
-  ordonnance_refusee: "Ordonnance refusée",
-  en_fabrication: "En fabrication",
+  en_preparation: "En préparation",
   expediee: "Expédiée",
   prete_en_boutique: "Prête en boutique",
   livree: "Livrée",
@@ -33,10 +30,7 @@ const statusLabels: Record<string, string> = {
 const statusColors: Record<string, string> = {
   en_attente_paiement: "bg-yellow-100 text-yellow-800",
   payee: "bg-blue-100 text-blue-800",
-  ordonnance_en_validation: "bg-orange-100 text-orange-800",
-  ordonnance_validee: "bg-green-100 text-green-800",
-  ordonnance_refusee: "bg-red-100 text-red-800",
-  en_fabrication: "bg-indigo-100 text-indigo-800",
+  en_preparation: "bg-indigo-100 text-indigo-800",
   expediee: "bg-purple-100 text-purple-800",
   prete_en_boutique: "bg-teal-100 text-teal-800",
   livree: "bg-emerald-100 text-emerald-800",
