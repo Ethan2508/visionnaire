@@ -24,6 +24,7 @@ interface Product {
   requires_prescription: boolean;
   brands: { name: string } | null;
   product_images: { url: string; is_primary: boolean }[];
+  product_variants: { price_override: number | null; is_active: boolean }[];
 }
 
 export default function BrandDetailPage() {
@@ -51,7 +52,7 @@ export default function BrandDetailPage() {
         // Charger les produits de cette marque
         const { data: productsData } = (await supabase
           .from("products")
-          .select("id, name, slug, category, base_price, requires_prescription, brands(name), product_images(url, is_primary)")
+          .select("id, name, slug, category, base_price, requires_prescription, brands(name), product_images(url, is_primary), product_variants(price_override, is_active)")
           .eq("brand_id", brandData.id)
           .eq("is_active", true)
           .order("created_at", { ascending: false })) as { data: Product[] | null };
@@ -127,18 +128,26 @@ export default function BrandDetailPage() {
         </p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map((product) => (
+          {products.map((product) => {
+              const lowestVariantPrice = product.product_variants
+                ?.filter((v) => v.is_active && v.price_override != null)
+                .reduce((min, v) => Math.min(min, v.price_override!), Infinity);
+              const displayPrice = lowestVariantPrice !== Infinity ? lowestVariantPrice : product.base_price;
+              const compareAt = lowestVariantPrice !== Infinity && lowestVariantPrice < product.base_price ? product.base_price : undefined;
+              return (
               <ProductCard
                 key={product.id}
                 slug={product.slug}
                 name={product.name}
                 brandName={product.brands?.name}
-                price={product.base_price}
+                price={displayPrice}
+                compareAtPrice={compareAt}
                 images={product.product_images}
                 category={product.category}
                 requiresPrescription={product.requires_prescription}
               />
-          ))}
+              );
+          })}
         </div>
       )}
     </div>

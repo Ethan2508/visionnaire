@@ -18,6 +18,7 @@ interface Product {
   frame_shape: string | null;
   brands: { name: string } | null;
   product_images: { url: string; is_primary: boolean }[];
+  product_variants: { price_override: number | null; is_active: boolean }[];
 }
 
 interface Brand {
@@ -59,7 +60,7 @@ function CataloguePage() {
     // Construire la requete produits
     let query = supabase
       .from("products")
-      .select("id, name, slug, category, gender, base_price, requires_prescription, frame_shape, brands(name), product_images(url, is_primary)")
+      .select("id, name, slug, category, gender, base_price, requires_prescription, frame_shape, brands(name), product_images(url, is_primary), product_variants(price_override, is_active)")
       .eq("is_active", true);
 
     if (categoryFilter) {
@@ -274,18 +275,26 @@ function CataloguePage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {products.map((product) => (
+              {products.map((product) => {
+                  const lowestVariantPrice = product.product_variants
+                    ?.filter((v) => v.is_active && v.price_override != null)
+                    .reduce((min, v) => Math.min(min, v.price_override!), Infinity);
+                  const displayPrice = lowestVariantPrice !== Infinity ? lowestVariantPrice : product.base_price;
+                  const compareAt = lowestVariantPrice !== Infinity && lowestVariantPrice < product.base_price ? product.base_price : undefined;
+                  return (
                   <ProductCard
                     key={product.id}
                     slug={product.slug}
                     name={product.name}
                     brandName={product.brands?.name}
-                    price={product.base_price}
+                    price={displayPrice}
+                    compareAtPrice={compareAt}
                     images={product.product_images}
                     category={product.category}
                     requiresPrescription={product.requires_prescription}
                   />
-              ))}
+                  );
+              })}
             </div>
           )}
         </div>

@@ -275,9 +275,25 @@ export default function ProductDetailPage() {
             {product.name}
           </h1>
 
-          <p className="text-2xl font-bold text-stone-900 mt-4">
-            {formatPrice(currentPrice)}
-          </p>
+          <div className="mt-4">
+            {selectedVariant?.price_override != null && selectedVariant.price_override < product.base_price ? (
+              <div className="flex items-baseline gap-3">
+                <p className="text-2xl font-bold text-red-600">
+                  {formatPrice(selectedVariant.price_override)}
+                </p>
+                <p className="text-lg text-stone-400 line-through">
+                  {formatPrice(product.base_price)}
+                </p>
+                <span className="text-xs font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                  -{Math.round((1 - selectedVariant.price_override / product.base_price) * 100)}%
+                </span>
+              </div>
+            ) : (
+              <p className="text-2xl font-bold text-stone-900">
+                {formatPrice(currentPrice)}
+              </p>
+            )}
+          </div>
 
           {product.requires_prescription && (
             <p className="text-sm text-blue-600 font-medium mt-1">
@@ -373,7 +389,7 @@ export default function ProductDetailPage() {
           {product.description && (
             <div className="mt-8">
               <h3 className="text-sm font-semibold text-stone-900 mb-2">Description</h3>
-              <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-line break-words" style={{ overflowWrap: "anywhere" }}>
                 {product.description}
               </p>
             </div>

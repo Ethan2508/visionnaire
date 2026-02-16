@@ -10,6 +10,7 @@ interface ProductCardProps {
   name: string;
   brandName?: string;
   price: number;
+  compareAtPrice?: number;
   images?: { url: string; is_primary?: boolean }[];
   imageUrl?: string; // fallback si pas d'images[]
   category: string;
@@ -21,6 +22,7 @@ export default function ProductCard({
   name,
   brandName,
   price,
+  compareAtPrice,
   images,
   imageUrl,
   category,
@@ -151,9 +153,23 @@ export default function ProductCard({
         <h3 className="text-sm font-semibold text-stone-900 group-hover:text-stone-700 line-clamp-2">
           {name}
         </h3>
-        <p className="text-sm font-bold text-stone-900 mt-2">
-          {formatPrice(price)}
-        </p>
+        {compareAtPrice && compareAtPrice > price ? (
+          <div className="flex items-baseline gap-2 mt-2">
+            <p className="text-sm font-bold text-red-600">
+              {formatPrice(price)}
+            </p>
+            <p className="text-xs text-stone-400 line-through">
+              {formatPrice(compareAtPrice)}
+            </p>
+            <span className="text-[10px] font-semibold bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">
+              -{Math.round((1 - price / compareAtPrice) * 100)}%
+            </span>
+          </div>
+        ) : (
+          <p className="text-sm font-bold text-stone-900 mt-2">
+            {formatPrice(price)}
+          </p>
+        )}
       </div>
     </Link>
   );
