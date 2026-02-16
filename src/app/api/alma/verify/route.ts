@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Si la commande est déjà payée (le webhook a déjà traité)
-    if (order.status === "payee" || order.status === "en_preparation") {
+    if (order.status === "payee" || order.status === "expediee" || order.status === "prete_en_boutique") {
       return NextResponse.json({
         success: true,
         orderNumber: order.order_number,

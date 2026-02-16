@@ -374,6 +374,9 @@ CREATE POLICY "Users can manage own addresses" ON addresses FOR ALL USING (profi
 -- Orders : chacun les siennes, admin voit tout
 CREATE POLICY "Users can view own orders" ON orders FOR SELECT USING (profile_id = auth.uid());
 CREATE POLICY "Users can create own orders" ON orders FOR INSERT WITH CHECK (profile_id = auth.uid());
+CREATE POLICY "Users can update own order status" ON orders FOR UPDATE 
+  USING (profile_id = auth.uid())
+  WITH CHECK (profile_id = auth.uid());
 CREATE POLICY "Admin can manage all orders" ON orders FOR ALL USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
 );

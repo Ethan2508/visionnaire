@@ -38,7 +38,7 @@ interface DashboardStats {
 const statusColors: Record<string, string> = {
   en_attente_paiement: "bg-yellow-100 text-yellow-800",
   payee: "bg-blue-100 text-blue-800",
-  en_preparation: "bg-indigo-100 text-indigo-800",
+
   expediee: "bg-purple-100 text-purple-800",
   prete_en_boutique: "bg-teal-100 text-teal-800",
   livree: "bg-emerald-100 text-emerald-800",
@@ -48,7 +48,7 @@ const statusColors: Record<string, string> = {
 const statusLabels: Record<string, string> = {
   en_attente_paiement: "En attente",
   payee: "Payée",
-  en_preparation: "Préparation",
+
   expediee: "Expédiée",
   prete_en_boutique: "Prête",
   livree: "Livrée",

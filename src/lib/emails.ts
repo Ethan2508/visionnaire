@@ -385,3 +385,63 @@ export function orderReadyEmail(data: { orderNumber: string; firstName: string }
     html: layout(content),
   };
 }
+
+/* ═══════════════════════════════════════════
+   7. NOTIFICATION ADMIN — NOUVELLE COMMANDE
+═══════════════════════════════════════════ */
+
+interface AdminOrderNotificationData {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  items: OrderItem[];
+  total: number;
+  deliveryMethod: string;
+  paymentMethod: string;
+}
+
+export function adminOrderNotificationEmail(data: AdminOrderNotificationData) {
+  const itemsHtml = data.items
+    .map(
+      (item) => `
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #f5f5f4;font-size:13px;color:#44403c;">
+          ${item.product_name}
+          ${item.variant_info ? `<br/><span style="color:#a8a29e;font-size:11px;">${item.variant_info}</span>` : ""}
+        </td>
+        <td style="padding:8px 0;border-bottom:1px solid #f5f5f4;font-size:13px;color:#78716c;text-align:center;">×${item.quantity}</td>
+      </tr>`
+    )
+    .join("");
+
+  const deliveryLabel = data.deliveryMethod === "boutique" ? "Retrait en boutique" : "Livraison à domicile";
+  const paymentLabel = data.paymentMethod === "alma" ? "Alma (paiement fractionné)" : "Carte bancaire";
+
+  const content = `
+    ${heading("🛍️ Nouvelle commande")}
+    ${subheading(`Commande ${data.orderNumber} passée par ${data.customerName}`)}
+    ${divider()}
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:16px;">
+      <tr><td style="padding:4px 0;font-size:13px;color:#a8a29e;">Client</td><td style="padding:4px 0;font-size:14px;color:#1c1917;"><strong>${data.customerName}</strong></td></tr>
+      <tr><td style="padding:4px 0;font-size:13px;color:#a8a29e;">Email</td><td style="padding:4px 0;font-size:14px;color:#1c1917;"><a href="mailto:${data.customerEmail}" style="color:#1c1917;">${data.customerEmail}</a></td></tr>
+      <tr><td style="padding:4px 0;font-size:13px;color:#a8a29e;">Livraison</td><td style="padding:4px 0;font-size:14px;color:#1c1917;">${deliveryLabel}</td></tr>
+      <tr><td style="padding:4px 0;font-size:13px;color:#a8a29e;">Paiement</td><td style="padding:4px 0;font-size:14px;color:#1c1917;">${paymentLabel}</td></tr>
+    </table>
+    ${divider()}
+    <p style="margin:0 0 8px;font-size:12px;color:#a8a29e;text-transform:uppercase;letter-spacing:1px;">Articles commandés</p>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tbody>
+        ${itemsHtml}
+      </tbody>
+    </table>
+    <p style="margin:16px 0 0;font-size:16px;color:#1c1917;font-weight:600;text-align:right;">
+      Total : ${formatPrice(data.total)}
+    </p>
+    ${button("Voir la commande", `${SITE_URL}/admin/commandes`)}
+  `;
+
+  return {
+    subject: `Nouvelle commande ${data.orderNumber} — ${data.customerName}`,
+    html: layout(content),
+  };
+}

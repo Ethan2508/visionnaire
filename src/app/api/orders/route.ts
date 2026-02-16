@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { OrderStatus, DeliveryMethod, PaymentMethod } from "@/types/database";
 import { SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from "@/lib/utils";
 import { getResend, EMAIL_FROM } from "@/lib/resend";
-import { orderConfirmationEmail } from "@/lib/emails";
+import { orderConfirmationEmail, adminOrderNotificationEmail } from "@/lib/emails";
 
 interface OrderInsert {
   order_number: string;
@@ -259,7 +259,7 @@ export async function POST(request: Request) {
   try {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("first_name, email")
+      .select("first_name, last_name, email")
       .eq("id", user.id)
       .single();
 
@@ -292,6 +292,33 @@ export async function POST(request: Request) {
         subject: emailData.subject,
         html: emailData.html,
       });
+
+      // Envoyer une notification aux admins (non-bloquant)
+      try {
+        const adminEmailData = adminOrderNotificationEmail({
+          orderNumber: o.order_number,
+          customerName: `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Client",
+          customerEmail: profile.email,
+          items: orderItems.map((item) => ({
+            product_name: item.product_name as string,
+            variant_info: item.variant_info as string | null,
+            quantity: item.quantity as number,
+            unit_price: item.unit_price as number,
+          })),
+          total,
+          deliveryMethod: deliveryMethod || "domicile",
+          paymentMethod: paymentMethod || "stripe",
+        });
+
+        await getResend().emails.send({
+          from: EMAIL_FROM,
+          to: "contact@visionnairesopticiens.fr",
+          subject: adminEmailData.subject,
+          html: adminEmailData.html,
+        });
+      } catch (adminEmailError) {
+        console.error("[ORDER] Error sending admin notification:", adminEmailError);
+      }
     }
   } catch (emailError) {
     // Non-bloquant : ne pas faire échouer la commande si l'email échoue

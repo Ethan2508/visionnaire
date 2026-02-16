@@ -62,7 +62,6 @@ interface Order {
 const statusColors: Record<string, string> = {
   en_attente_paiement: "bg-yellow-100 text-yellow-800",
   payee: "bg-blue-100 text-blue-800",
-  en_preparation: "bg-indigo-100 text-indigo-800",
   expediee: "bg-purple-100 text-purple-800",
   prete_en_boutique: "bg-teal-100 text-teal-800",
   livree: "bg-emerald-100 text-emerald-800",
@@ -72,8 +71,7 @@ const statusColors: Record<string, string> = {
 // Statuts possibles selon le statut actuel
 const nextStatuses: Record<string, string[]> = {
   en_attente_paiement: ["payee", "annulee"],
-  payee: ["en_preparation", "annulee"],
-  en_preparation: ["expediee", "prete_en_boutique"],
+  payee: ["expediee", "prete_en_boutique", "annulee"],
   expediee: ["livree"],
   prete_en_boutique: ["livree"],
   livree: [],
@@ -188,8 +186,8 @@ export default function AdminOrderDetailPage() {
       .update(updates as never)
       .eq("id", order.id);
 
-    // Auto-expédié quand un tracking number est ajouté et que le statut est en_preparation ou payee
-    if (trackingNumber && !order.tracking_number && ["payee", "en_preparation"].includes(order.status)) {
+    // Auto-expédié quand un tracking number est ajouté et que le statut est payee
+    if (trackingNumber && !order.tracking_number && order.status === "payee") {
       await supabase
         .from("orders")
         .update({ status: "expediee" } as never)
