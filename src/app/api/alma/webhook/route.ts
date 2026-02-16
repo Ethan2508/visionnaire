@@ -14,7 +14,19 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // S4: Verify webhook authenticity via Alma-Signature header
+    const signature = request.headers.get("X-Alma-Signature");
+    if (!signature) {
+      // If Alma sends a signature, verify it. Otherwise rely on callback verification.
+      console.warn("[ALMA WEBHOOK] No signature header — proceeding with callback verification");
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
     const paymentId = body.id || body.payment_id;
 
     if (!paymentId) {

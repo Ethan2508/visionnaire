@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ user: null });
+    return NextResponse.json({ user: null }, { status: 401 });
   }
 
   // Use service role client to bypass RLS (avoids infinite recursion on profiles table)

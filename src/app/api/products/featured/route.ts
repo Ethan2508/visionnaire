@@ -40,14 +40,26 @@ export async function GET(request: Request) {
 
   // If user is logged in, try to get personalized recommendations
   if (userId) {
-    // Get brands and categories from past orders
-    const { data: orderItems } = await supabaseAdmin
-      .from("order_items")
-      .select("product_id, products(brand_id, category, gender)")
-      .eq("orders.profile_id", userId)
+    // Get brands and categories from past orders via a proper join
+    const { data: orders } = await supabaseAdmin
+      .from("orders")
+      .select("id")
+      .eq("profile_id", userId)
       .limit(20);
 
-    if (orderItems && orderItems.length > 0) {
+    const orderIds = orders?.map((o) => o.id) || [];
+
+    let orderItems: { product_id: string; products: unknown }[] = [];
+    if (orderIds.length > 0) {
+      const { data } = await supabaseAdmin
+        .from("order_items")
+        .select("product_id, products(brand_id, category, gender)")
+        .in("order_id", orderIds)
+        .limit(20);
+      orderItems = (data || []) as typeof orderItems;
+    }
+
+    if (orderItems.length > 0) {
       const brandIds = new Set<string>();
       const categories = new Set<string>();
       for (const item of orderItems) {

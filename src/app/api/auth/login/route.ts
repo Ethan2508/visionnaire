@@ -3,7 +3,21 @@ import { NextResponse } from "next/server";
 import type { Database } from "@/types/database";
 
 export async function POST(request: Request) {
-  const { email, password, redirect } = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Corps de requête invalide" }, { status: 400 });
+  }
+  const { email, password, redirect } = body;
+
+  // S11: Input validation
+  if (!email || typeof email !== "string" || !email.includes("@")) {
+    return NextResponse.json({ error: "Email invalide" }, { status: 400 });
+  }
+  if (!password || typeof password !== "string" || password.length < 6) {
+    return NextResponse.json({ error: "Mot de passe requis (6 caractères minimum)" }, { status: 400 });
+  }
 
   // Collecter les cookies à définir
   const cookiesToSet: { name: string; value: string; options: CookieOptions }[] = [];
@@ -33,7 +47,7 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 401 });
+    return NextResponse.json({ error: "Email ou mot de passe incorrect" }, { status: 401 });
   }
 
   // Créer la réponse et ajouter les cookies

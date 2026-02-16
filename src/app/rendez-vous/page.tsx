@@ -11,10 +11,30 @@ export default function RendezVousPage() {
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    // Simulate submission (replace with real API call later)
-    await new Promise((r) => setTimeout(r, 800));
-    setSubmitted(true);
-    setLoading(false);
+
+    const formData = new FormData(e.currentTarget);
+    try {
+      const res = await fetch("/api/rendez-vous", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.get("firstName"),
+          lastName: formData.get("lastName"),
+          email: formData.get("email"),
+          phone: formData.get("phone"),
+          reason: formData.get("reason"),
+          preferredDate: formData.get("preferredDate") || null,
+          message: formData.get("message") || null,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Erreur");
+      setSubmitted(true);
+    } catch {
+      alert("Une erreur est survenue. Veuillez réessayer ou nous appeler directement.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

@@ -6,10 +6,16 @@ const ALMA_API_URL = process.env.ALMA_SANDBOX === "true"
   ? "https://api.sandbox.getalma.eu/v1"
   : "https://api.getalma.eu/v1";
 
-export async function GET(request: NextRequest) {
+// S8: Changed from GET to POST to avoid side effects on GET requests
+export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const orderId = searchParams.get("orderId");
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Corps de requête invalide" }, { status: 400 });
+    }
+    const orderId = body.orderId;
 
     if (!orderId) {
       return NextResponse.json({ error: "orderId requis" }, { status: 400 });

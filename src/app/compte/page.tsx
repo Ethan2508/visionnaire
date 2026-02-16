@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, ORDER_STATUS_STYLES } from "@/lib/utils";
 import {
   User,
   Package,
@@ -48,15 +48,7 @@ interface Address {
   is_default: boolean;
 }
 
-const statusLabels: Record<string, { label: string; color: string }> = {
-  en_attente_paiement: { label: "En attente de paiement", color: "bg-yellow-100 text-yellow-800" },
-  payee: { label: "Payée", color: "bg-blue-100 text-blue-800" },
-  en_preparation: { label: "En préparation", color: "bg-indigo-100 text-indigo-800" },
-  expediee: { label: "Expédiée", color: "bg-purple-100 text-purple-800" },
-  prete_en_boutique: { label: "Prête en boutique", color: "bg-teal-100 text-teal-800" },
-  livree: { label: "Livrée", color: "bg-green-100 text-green-800" },
-  annulee: { label: "Annulée", color: "bg-stone-100 text-stone-600" },
-};
+const statusLabels = ORDER_STATUS_STYLES;
 
 type Tab = "profil" | "commandes" | "adresses";
 

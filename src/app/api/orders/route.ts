@@ -1,6 +1,9 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { OrderStatus, DeliveryMethod, PaymentMethod } from "@/types/database";
+import { SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from "@/lib/utils";
+import { resend, EMAIL_FROM } from "@/lib/resend";
+import { orderConfirmationEmail } from "@/lib/emails";
 
 interface OrderInsert {
   order_number: string;
@@ -62,28 +65,47 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
 
-  if (!items || items.length === 0) {
+  if (!items || !Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: "Panier vide" }, { status: 400 });
   }
 
-  // Calculer les totaux
+  // S5: Validate quantities — must be positive integers
+  for (const item of items) {
+    if (!item.variantId || typeof item.variantId !== "string") {
+      return NextResponse.json({ error: "Variante invalide" }, { status: 400 });
+    }
+    if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10) {
+      return NextResponse.json({ error: "Quantité invalide (1-10 par article)" }, { status: 400 });
+    }
+  }
+
+  // Calculer les totaux — batch fetch all variants at once (fix N+1)
   let subtotal = 0;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const orderItems: Record<string, any>[] = [];
 
-  for (const item of items) {
-    const { data: variant } = await supabase
-      .from("product_variants")
-      .select("price_override, products(base_price)")
-      .eq("id", item.variantId)
-      .single();
+  const variantIds = items.map((i: { variantId: string }) => i.variantId);
+  const { data: variants } = await supabase
+    .from("product_variants")
+    .select("id, price_override, products(base_price)")
+    .in("id", variantIds);
 
+  if (!variants || variants.length === 0) {
+    return NextResponse.json({ error: "Variantes introuvables" }, { status: 400 });
+  }
+
+  const variantMap = new Map<string, { price_override: number | null; products: { base_price: number } | null }>();
+  for (const v of variants) {
+    variantMap.set(v.id, v as unknown as { price_override: number | null; products: { base_price: number } | null });
+  }
+
+  for (const item of items) {
+    const variant = variantMap.get(item.variantId);
     if (!variant) {
       return NextResponse.json({ error: `Variante ${item.variantId} introuvable` }, { status: 400 });
     }
 
-    const v = variant as unknown as { price_override: number | null; products: { base_price: number } | null };
-    const unitPrice = Number(v.price_override ?? v.products?.base_price ?? 0);
+    const unitPrice = Number(variant.price_override ?? variant.products?.base_price ?? 0);
     const itemTotal = unitPrice * item.quantity;
     subtotal += itemTotal;
 
@@ -110,8 +132,8 @@ export async function POST(request: Request) {
 
     if (promo) {
       const now = new Date();
-      const validStart = !promo.start_date || new Date(promo.start_date) <= now;
-      const validEnd = !promo.end_date || new Date(promo.end_date) >= now;
+      const validStart = !promo.starts_at || new Date(promo.starts_at) <= now;
+      const validEnd = !promo.ends_at || new Date(promo.ends_at) >= now;
       const validMin = !promo.min_order_amount || subtotal >= promo.min_order_amount;
 
       if (validStart && validEnd && validMin) {
@@ -124,15 +146,16 @@ export async function POST(request: Request) {
     }
   }
 
-  const shippingCost = deliveryMethod === "domicile" && subtotal < 150 ? 6.90 : 0;
+  const shippingCost = deliveryMethod === "domicile" && subtotal < FREE_SHIPPING_THRESHOLD ? SHIPPING_COST : 0;
   const total = subtotal - discountAmount + shippingCost;
 
-  // Générer le numéro de commande
+  // Générer le numéro de commande (with random suffix to avoid race conditions)
   const year = new Date().getFullYear();
   const { count } = await supabase
     .from("orders")
     .select("*", { count: "exact", head: true });
-  const orderNumber = `VO-${year}-${String((count || 0) + 1).padStart(4, "0")}`;
+  const random = Math.random().toString(36).substring(2, 5).toUpperCase();
+  const orderNumber = `VO-${year}-${String((count || 0) + 1).padStart(4, "0")}-${random}`;
 
   // Créer la commande
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -230,6 +253,49 @@ export async function POST(request: Request) {
       // Non-bloquant : on ne veut pas que l'erreur d'adresse bloque la commande
       console.error("[ORDER] Error saving address:", e);
     }
+  }
+
+  // Envoyer l'email de confirmation (non-bloquant)
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name, email")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.email) {
+      const emailData = orderConfirmationEmail({
+        orderNumber: o.order_number,
+        firstName: profile.first_name || "Client",
+        items: orderItems.map((item) => ({
+          product_name: item.product_name as string,
+          variant_info: item.variant_info as string | null,
+          quantity: item.quantity as number,
+          unit_price: item.unit_price as number,
+        })),
+        subtotal,
+        shippingCost,
+        total,
+        deliveryMethod: deliveryMethod || "domicile",
+        shippingAddress: shippingAddress
+          ? {
+              street: shippingAddress.street || "",
+              city: shippingAddress.city || "",
+              postalCode: shippingAddress.postalCode || "",
+            }
+          : undefined,
+      });
+
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: profile.email,
+        subject: emailData.subject,
+        html: emailData.html,
+      });
+    }
+  } catch (emailError) {
+    // Non-bloquant : ne pas faire échouer la commande si l'email échoue
+    console.error("[ORDER] Error sending confirmation email:", emailError);
   }
 
   const response = NextResponse.json({

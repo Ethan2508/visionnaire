@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -78,13 +79,16 @@ export default function ProductCard({
               style={{ transform: `translateX(-${currentIndex * 100}%)` }}
             >
               {imageList.map((url, i) => (
-                <img
-                  key={i}
-                  src={url}
-                  alt={`${name} - ${i + 1}`}
-                  className="w-full h-full object-cover shrink-0"
-                  loading={i === 0 ? "eager" : "lazy"}
-                />
+                <div key={i} className="relative w-full h-full shrink-0">
+                  <Image
+                    src={url}
+                    alt={`${name} - image ${i + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                    className="object-cover"
+                    loading={i === 0 ? "eager" : "lazy"}
+                  />
+                </div>
               ))}
             </div>
 
@@ -94,7 +98,7 @@ export default function ProductCard({
                 <button
                   onClick={prev}
                   className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
-                  aria-label="Image precedente"
+                  aria-label="Image précédente"
                 >
                   <ChevronLeft size={16} className="text-stone-700" />
                 </button>

@@ -23,7 +23,11 @@ function AlmaRetourContent() {
 
     async function verifyPayment() {
       try {
-        const res = await fetch(`/api/alma/verify?orderId=${orderId}`);
+        const res = await fetch(`/api/alma/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId }),
+        });
         const data = await res.json();
 
         if (res.ok && data.success) {
@@ -81,7 +85,7 @@ function AlmaRetourContent() {
               Retour au panier
             </Link>
             <Link
-              href="/contact"
+              href="tel:+33478526222"
               className="inline-flex items-center gap-2 bg-stone-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-stone-800 transition-colors justify-center"
             >
               Nous contacter

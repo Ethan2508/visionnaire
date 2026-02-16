@@ -151,6 +151,19 @@ export default function AdminOrderDetailPage() {
       comment: statusComment || null,
     } as never);
 
+    // Envoyer un email de notification au client si expédiée ou prête en boutique
+    if (["expediee", "prete_en_boutique"].includes(newStatus)) {
+      fetch("/api/admin/orders/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          status: newStatus,
+          trackingNumber: trackingNumber || null,
+        }),
+      }).catch(() => {});
+    }
+
     setStatusComment("");
     await loadOrder();
     setUpdating(false);
@@ -187,6 +200,17 @@ export default function AdminOrderDetailPage() {
         status: "expediee",
         comment: `Numéro de suivi ajouté : ${trackingNumber}`,
       } as never);
+
+      // Envoyer l'email d'expédition
+      fetch("/api/admin/orders/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          status: "expediee",
+          trackingNumber,
+        }),
+      }).catch(() => {});
     }
 
     await loadOrder();

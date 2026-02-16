@@ -116,7 +116,7 @@ function CataloguePage() {
         </h1>
         {searchQuery && (
           <p className="text-stone-500 mt-1">
-            Resultats pour &quot;{searchQuery}&quot;
+            Résultats pour &quot;{searchQuery}&quot;
           </p>
         )}
         <p className="text-stone-500 mt-1">{products.length} produit{products.length > 1 ? "s" : ""}</p>
@@ -127,7 +127,7 @@ function CataloguePage() {
         <aside className="hidden lg:block w-60 shrink-0">
           <div className="sticky top-24 space-y-6">
             <FilterSection
-              title="Categorie"
+              title="Catégorie"
               value={categoryFilter}
               onChange={(v) => setFilter("categorie", v)}
               options={[
@@ -194,9 +194,9 @@ function CataloguePage() {
             onChange={(e) => setFilter("tri", e.target.value)}
             className="px-3 py-2 border border-stone-300 rounded-lg text-sm bg-white"
           >
-            <option value="recent">Plus recents</option>
+            <option value="recent">Plus récents</option>
             <option value="prix-asc">Prix croissant</option>
-            <option value="prix-desc">Prix decroissant</option>
+            <option value="prix-desc">Prix décroissant</option>
             <option value="nom">Nom A-Z</option>
           </select>
         </div>
@@ -205,7 +205,7 @@ function CataloguePage() {
         {showFilters && (
           <div className="lg:hidden bg-white rounded-xl border border-stone-200 p-4 space-y-4 mb-4">
             <FilterSection
-              title="Categorie"
+              title="Catégorie"
               value={categoryFilter}
               onChange={(v) => setFilter("categorie", v)}
               options={[
@@ -240,9 +240,9 @@ function CataloguePage() {
               onChange={(e) => setFilter("tri", e.target.value)}
               className="px-3 py-2 border border-stone-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-stone-900"
             >
-              <option value="recent">Plus recents</option>
+              <option value="recent">Plus récents</option>
               <option value="prix-asc">Prix croissant</option>
-              <option value="prix-desc">Prix decroissant</option>
+              <option value="prix-desc">Prix décroissant</option>
               <option value="nom">Nom A-Z</option>
             </select>
           </div>
@@ -262,7 +262,7 @@ function CataloguePage() {
             </div>
           ) : products.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-stone-500">Aucun produit ne correspond a vos criteres.</p>
+              <p className="text-stone-500">Aucun produit ne correspond à vos critères.</p>
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}

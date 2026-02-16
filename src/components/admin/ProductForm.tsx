@@ -503,7 +503,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
 
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1">
-              Categorie *
+              Catégorie *
             </label>
             <select
               value={product.category}

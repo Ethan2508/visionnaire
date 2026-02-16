@@ -96,6 +96,17 @@ export async function PUT(request: Request) {
   const body = await request.json();
   const { firstName, lastName, phone } = body;
 
+  // Validate inputs
+  if (firstName !== undefined && (typeof firstName !== "string" || firstName.length > 100)) {
+    return NextResponse.json({ error: "Prénom invalide" }, { status: 400 });
+  }
+  if (lastName !== undefined && (typeof lastName !== "string" || lastName.length > 100)) {
+    return NextResponse.json({ error: "Nom invalide" }, { status: 400 });
+  }
+  if (phone !== undefined && (typeof phone !== "string" || phone.length > 20)) {
+    return NextResponse.json({ error: "Téléphone invalide" }, { status: 400 });
+  }
+
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -112,7 +123,7 @@ export async function PUT(request: Request) {
     .eq("id", user.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors de la mise à jour" }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

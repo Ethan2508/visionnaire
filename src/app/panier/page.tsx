@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCartStore, type CartItem } from "@/lib/store/cart";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from "@/lib/utils";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, ArrowRight } from "lucide-react";
 
 function CartItemRow({ item, onUpdateQuantity, onRemove }: {
@@ -17,12 +17,14 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: {
   return (
     <div className="flex gap-4 py-6 border-b border-stone-100 last:border-b-0">
       {/* Image */}
-      <div className="w-24 h-24 sm:w-32 sm:h-32 bg-stone-100 rounded-lg overflow-hidden flex-shrink-0">
+      <div className="w-24 h-24 sm:w-32 sm:h-32 bg-stone-100 rounded-lg overflow-hidden flex-shrink-0 relative">
         {item.imageUrl ? (
-          <img
+          <Image
             src={item.imageUrl}
             alt={item.productName}
-            className="w-full h-full object-cover"
+            fill
+            sizes="128px"
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-stone-300">
@@ -141,7 +143,7 @@ export default function PanierPage() {
   const subtotal = getSubtotal();
   const total = getTotal();
   const itemCount = getItemCount();
-  const shippingCost = total < 150 ? 6.90 : 0;
+  const shippingCost = total < FREE_SHIPPING_THRESHOLD ? SHIPPING_COST : 0;
   const finalTotal = total + shippingCost;
 
   return (

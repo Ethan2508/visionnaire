@@ -18,8 +18,8 @@ export default function Footer() {
               className="h-9 w-auto mb-5"
             />
             <p className="text-sm text-white/50 leading-relaxed max-w-sm">
-              Votre opticien de confiance. Decouvrez notre selection de lunettes de vue,
-              soleil et sport des plus grandes marques. Expertise et conseils personnalises.
+              Votre opticien de confiance. Découvrez notre sélection de lunettes de vue,
+              soleil et sport des plus grandes marques. Expertise et conseils personnalisés.
             </p>
           </div>
 
@@ -80,12 +80,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/mentions-legales" className="text-sm text-white/60 hover:text-white transition-colors">
-                  Mentions legales
+                  Mentions légales
                 </Link>
               </li>
               <li>
                 <Link href="/confidentialite" className="text-sm text-white/60 hover:text-white transition-colors">
-                  Confidentialite
+                  Confidentialité
                 </Link>
               </li>
             </ul>
@@ -126,10 +126,10 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[11px] text-white/30">
-            &copy; {new Date().getFullYear()} Visionnaires Opticiens. Tous droits reserves.
+            &copy; {new Date().getFullYear()} Visionnaires Opticiens. Tous droits réservés.
           </p>
           <div className="flex items-center gap-6">
-            <span className="text-[11px] text-white/30">Paiement securise</span>
+            <span className="text-[11px] text-white/30">Paiement sécurisé</span>
             <div className="flex items-center gap-3">
               <span className="text-[11px] font-medium text-white/50 border border-white/20 px-2.5 py-1 rounded">
                 Visa

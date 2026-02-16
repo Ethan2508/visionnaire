@@ -46,6 +46,13 @@ export default function RegisterPage() {
       return;
     }
 
+    // Envoyer l'email de bienvenue (non-bloquant)
+    fetch("/api/auth/welcome", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, firstName }),
+    }).catch(() => {});
+
     setSuccess(true);
     setLoading(false);
   }

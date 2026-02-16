@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import Script from "next/script";
 import { createClient } from "@supabase/supabase-js";
 import {
   ArrowRight,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import AnimatedSection from "@/components/home/AnimatedSection";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
+import NewsletterForm from "@/components/home/NewsletterForm";
 
 /* ─── Static Data ─── */
 
@@ -194,8 +196,64 @@ export default async function HomePage() {
     // Fail silently — client will fetch as fallback
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://visionnaireopticiens.vercel.app";
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": `${siteUrl}/#organization`,
+    name: "Visionnaire Opticiens",
+    description: "Votre opticien de confiance à Lyon. Lunettes de vue, soleil, ski et sport des plus grandes marques de luxe.",
+    url: siteUrl,
+    telephone: "+33478526222",
+    email: "contact@visionnaires.fr",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "44 Cours Franklin Roosevelt",
+      addressLocality: "Lyon",
+      postalCode: "69006",
+      addressCountry: "FR",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 45.7676,
+      longitude: 4.8512,
+    },
+    openingHoursSpecification: [
+      { "@type": "OpeningHoursSpecification", dayOfWeek: "Monday", opens: "14:00", closes: "19:00" },
+      { "@type": "OpeningHoursSpecification", dayOfWeek: ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], opens: "10:00", closes: "19:00" },
+    ],
+    priceRange: "€€€",
+    image: `${siteUrl}/images/hero/collection-femme.webp`,
+    sameAs: [],
+  };
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
   return (
     <div className="overflow-hidden">
+      {/* JSON-LD Structured Data */}
+      <Script
+        id="org-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+      <Script
+        id="faq-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       {/* ═══════════════════════════════════════════
           1. HERO — Cinematic full-viewport
       ═══════════════════════════════════════════ */}
@@ -857,19 +915,7 @@ export default async function HomePage() {
               Nouvelles collections, offres exclusives et conseils de nos
               opticiens directement dans votre boîte mail.
             </p>
-            <form className="mt-8 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Votre adresse e-mail"
-                className="flex-1 bg-white/10 border border-white/10 px-5 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition-colors input-glow"
-              />
-              <button
-                type="submit"
-                className="bg-white text-black px-7 py-3.5 text-sm font-medium uppercase tracking-[0.1em] hover:bg-white/90 transition-colors shrink-0"
-              >
-                S&apos;inscrire
-              </button>
-            </form>
+            <NewsletterForm />
             <p className="text-[10px] text-white/20 mt-4">
               En vous inscrivant, vous acceptez notre politique de confidentialité.
               Désabonnement en un clic.

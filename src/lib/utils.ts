@@ -47,3 +47,16 @@ export function orderStatusLabel(status: string): string {
   };
   return labels[status] || status;
 }
+
+export const ORDER_STATUS_STYLES: Record<string, { label: string; color: string }> = {
+  en_attente_paiement: { label: "En attente de paiement", color: "bg-yellow-100 text-yellow-800" },
+  payee: { label: "Payée", color: "bg-blue-100 text-blue-800" },
+  en_preparation: { label: "En préparation", color: "bg-indigo-100 text-indigo-800" },
+  expediee: { label: "Expédiée", color: "bg-purple-100 text-purple-800" },
+  prete_en_boutique: { label: "Prête en boutique", color: "bg-teal-100 text-teal-800" },
+  livree: { label: "Livrée", color: "bg-green-100 text-green-800" },
+  annulee: { label: "Annulée", color: "bg-stone-100 text-stone-600" },
+};
+
+export const SHIPPING_COST = 6.90;
+export const FREE_SHIPPING_THRESHOLD = 150;

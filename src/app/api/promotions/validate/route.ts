@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
 
     // Check dates
     const now = new Date();
-    if (promo.start_date && new Date(promo.start_date) > now) {
+    if (promo.starts_at && new Date(promo.starts_at) > now) {
       return NextResponse.json({ error: "Ce code promo n'est pas encore actif" }, { status: 400 });
     }
-    if (promo.end_date && new Date(promo.end_date) < now) {
+    if (promo.ends_at && new Date(promo.ends_at) < now) {
       return NextResponse.json({ error: "Ce code promo a expiré" }, { status: 400 });
     }
 
