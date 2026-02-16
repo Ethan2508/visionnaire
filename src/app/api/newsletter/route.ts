@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { resend, EMAIL_FROM } from "@/lib/resend";
+import { getResend, EMAIL_FROM } from "@/lib/resend";
 import { newsletterWelcomeEmail } from "@/lib/emails";
 
 export async function POST(request: Request) {
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     // Envoyer l'email de bienvenue newsletter (non-bloquant)
     try {
       const emailData = newsletterWelcomeEmail();
-      await resend.emails.send({
+      await getResend().emails.send({
         from: EMAIL_FROM,
         to: email.toLowerCase().trim(),
         subject: emailData.subject,

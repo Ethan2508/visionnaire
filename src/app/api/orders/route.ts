@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { OrderStatus, DeliveryMethod, PaymentMethod } from "@/types/database";
 import { SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from "@/lib/utils";
-import { resend, EMAIL_FROM } from "@/lib/resend";
+import { getResend, EMAIL_FROM } from "@/lib/resend";
 import { orderConfirmationEmail } from "@/lib/emails";
 
 interface OrderInsert {
@@ -286,7 +286,7 @@ export async function POST(request: Request) {
           : undefined,
       });
 
-      await resend.emails.send({
+      await getResend().emails.send({
         from: EMAIL_FROM,
         to: profile.email,
         subject: emailData.subject,

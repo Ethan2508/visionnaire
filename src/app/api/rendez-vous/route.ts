@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { resend, EMAIL_FROM } from "@/lib/resend";
+import { getResend, EMAIL_FROM } from "@/lib/resend";
 import { rdvConfirmationEmail, rdvNotificationEmail } from "@/lib/emails";
 
 export async function POST(request: Request) {
@@ -23,13 +23,13 @@ export async function POST(request: Request) {
     const shopEmail = rdvNotificationEmail(rdvData);
 
     await Promise.allSettled([
-      resend.emails.send({
+      getResend().emails.send({
         from: EMAIL_FROM,
         to: email,
         subject: clientEmail.subject,
         html: clientEmail.html,
       }),
-      resend.emails.send({
+      getResend().emails.send({
         from: EMAIL_FROM,
         to: "contact@visionnairesopticiens.fr",
         subject: shopEmail.subject,
