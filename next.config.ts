@@ -7,7 +7,7 @@ const ContentSecurityPolicy = `
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: blob: https://odirisqsqpdvitisvdzn.supabase.co https://www.google-analytics.com https://www.googletagmanager.com;
   font-src 'self' data:;
-  connect-src 'self' https://odirisqsqpdvitisvdzn.supabase.co wss://odirisqsqpdvitisvdzn.supabase.co https://www.google-analytics.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://api.sandbox.almapay.com https://api.almapay.com https://vercel.live;
+  connect-src 'self' https://odirisqsqpdvitisvdzn.supabase.co wss://odirisqsqpdvitisvdzn.supabase.co https://www.google-analytics.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://api.sandbox.almapay.com https://api.almapay.com https://api-adresse.data.gouv.fr https://vercel.live;
   frame-src 'self' https://checkout.almapay.com https://vercel.live;
   object-src 'none';
   base-uri 'self';
