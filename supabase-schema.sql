@@ -209,6 +209,8 @@ CREATE TABLE orders (
   -- Entreprise (optionnel)
   company_name TEXT,
   company_siret TEXT,
+  -- Coordonnées client (pour retrait boutique)
+  client_phone TEXT,
   -- Adresse de livraison (snapshot)
   shipping_first_name TEXT,
   shipping_last_name TEXT,

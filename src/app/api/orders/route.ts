@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     items, 
     deliveryMethod, 
     shippingAddress, 
+    pickupInfo,
     billingAddress, 
     companyName, 
     companySiret, 
@@ -177,8 +178,8 @@ export async function POST(request: Request) {
     subtotal,
     shipping_cost: shippingCost,
     total,
-    shipping_first_name: shippingAddress?.firstName || null,
-    shipping_last_name: shippingAddress?.lastName || null,
+    shipping_first_name: shippingAddress?.firstName || pickupInfo?.firstName || null,
+    shipping_last_name: shippingAddress?.lastName || pickupInfo?.lastName || null,
     shipping_street: shippingAddress?.street || null,
     shipping_street_2: shippingAddress?.street2 || null,
     shipping_city: shippingAddress?.city || null,
@@ -191,6 +192,7 @@ export async function POST(request: Request) {
   if (promoCode) orderData.promo_code = promoCode;
   if (companyName) orderData.company_name = companyName;
   if (companySiret) orderData.company_siret = companySiret;
+  if (pickupInfo?.phone) orderData.client_phone = pickupInfo.phone;
   
   // Adresse de facturation (si différente)
   if (billingAddress) {

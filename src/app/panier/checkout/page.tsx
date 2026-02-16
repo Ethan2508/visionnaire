@@ -59,6 +59,13 @@ export default function CheckoutPage() {
   const [companyName, setCompanyName] = useState("");
   const [companySiret, setCompanySiret] = useState("");
 
+  // Infos client pour retrait boutique
+  const [pickupInfo, setPickupInfo] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+  });
+
   // Paiement Alma
   const [almaInstallments, setAlmaInstallments] = useState<1 | 2 | 3 | 4 | 12>(1);
   
@@ -175,6 +182,7 @@ export default function CheckoutPage() {
           })),
           deliveryMethod,
           shippingAddress: deliveryMethod === "domicile" ? address : null,
+          pickupInfo: deliveryMethod === "boutique" ? pickupInfo : null,
           billingAddress: differentBillingAddress ? billingAddress : null,
           companyName: companyName || null,
           companySiret: companySiret || null,
@@ -629,6 +637,63 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
+                {/* Formulaire retrait boutique */}
+                {deliveryMethod === "boutique" && (
+                  <div className="bg-white rounded-xl border border-stone-200 p-6">
+                    <h2 className="text-lg font-semibold text-stone-900 mb-4">
+                      Vos coordonnées
+                    </h2>
+                    <p className="text-sm text-stone-500 mb-4">
+                      Ces informations nous permettront de vous contacter lorsque votre commande sera prête.
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                          Prénom *
+                        </label>
+                        <input
+                          type="text"
+                          value={pickupInfo.firstName}
+                          onChange={(e) =>
+                            setPickupInfo({ ...pickupInfo, firstName: e.target.value })
+                          }
+                          required
+                          className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                          Nom *
+                        </label>
+                        <input
+                          type="text"
+                          value={pickupInfo.lastName}
+                          onChange={(e) =>
+                            setPickupInfo({ ...pickupInfo, lastName: e.target.value })
+                          }
+                          required
+                          className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium text-stone-700 mb-1">
+                          Téléphone *
+                        </label>
+                        <input
+                          type="tel"
+                          value={pickupInfo.phone}
+                          onChange={(e) =>
+                            setPickupInfo({ ...pickupInfo, phone: e.target.value })
+                          }
+                          required
+                          placeholder="06 12 34 56 78"
+                          className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <button
                   onClick={() => {
                     if (
@@ -640,6 +705,15 @@ export default function CheckoutPage() {
                         !address.city)
                     ) {
                       setError("Veuillez remplir tous les champs obligatoires.");
+                      return;
+                    }
+                    if (
+                      deliveryMethod === "boutique" &&
+                      (!pickupInfo.firstName ||
+                        !pickupInfo.lastName ||
+                        !pickupInfo.phone)
+                    ) {
+                      setError("Veuillez remplir vos coordonnées pour le retrait.");
                       return;
                     }
                     setError(null);
