@@ -68,15 +68,19 @@ const statusColors: Record<string, string> = {
   annulee: "bg-stone-100 text-stone-500",
 };
 
-// Statuts possibles selon le statut actuel
-const nextStatuses: Record<string, string[]> = {
-  en_attente_paiement: ["payee", "annulee"],
-  payee: ["expediee", "prete_en_boutique", "annulee"],
-  expediee: ["livree"],
-  prete_en_boutique: ["livree"],
-  livree: [],
-  annulee: [],
-};
+// Statuts possibles selon le statut actuel ET le mode de livraison
+function getAvailableStatuses(currentStatus: string, deliveryMethod: string): string[] {
+  if (currentStatus === "en_attente_paiement") return ["payee", "annulee"];
+  if (currentStatus === "payee") {
+    // Pour livraison domicile : on ne met pas "expediee" ici, c'est géré séparément avec tracking obligatoire
+    if (deliveryMethod === "domicile") return ["annulee"];
+    // Pour retrait boutique : on peut marquer prête en boutique
+    if (deliveryMethod === "boutique") return ["prete_en_boutique", "annulee"];
+    return ["annulee"];
+  }
+  if (currentStatus === "expediee" || currentStatus === "prete_en_boutique") return ["livree"];
+  return [];
+}
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
@@ -171,45 +175,54 @@ export default function AdminOrderDetailPage() {
     // Removed - prescriptions no longer used
   }
 
+  async function shipOrder() {
+    if (!order || !trackingNumber.trim()) {
+      alert("Le numéro de suivi est obligatoire pour expédier la commande");
+      return;
+    }
+    setUpdating(true);
+    const supabase = createClient();
+
+    // Mettre à jour le tracking et le statut
+    await supabase
+      .from("orders")
+      .update({ 
+        tracking_number: trackingNumber.trim(),
+        status: "expediee"
+      } as never)
+      .eq("id", order.id);
+
+    // Ajouter dans l'historique
+    await supabase.from("order_status_history").insert({
+      order_id: order.id,
+      status: "expediee",
+      comment: `Numéro de suivi : ${trackingNumber.trim()}`,
+    } as never);
+
+    // Envoyer l'email d'expédition
+    fetch("/api/admin/orders/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId: order.id,
+        status: "expediee",
+        trackingNumber: trackingNumber.trim(),
+      }),
+    }).catch(() => {});
+
+    await loadOrder();
+    setUpdating(false);
+  }
+
   async function saveOrderDetails() {
     if (!order) return;
     const supabase = createClient();
 
-    // Si un numéro de suivi est ajouté, passer automatiquement en "expédiée"
-    const updates: Record<string, unknown> = {
-      tracking_number: trackingNumber || null,
-      notes: notes || null,
-    };
-
+    // Sauvegarder seulement les notes
     await supabase
       .from("orders")
-      .update(updates as never)
+      .update({ notes: notes || null } as never)
       .eq("id", order.id);
-
-    // Auto-expédié quand un tracking number est ajouté et que le statut est payee
-    if (trackingNumber && !order.tracking_number && order.status === "payee") {
-      await supabase
-        .from("orders")
-        .update({ status: "expediee" } as never)
-        .eq("id", order.id);
-
-      await supabase.from("order_status_history").insert({
-        order_id: order.id,
-        status: "expediee",
-        comment: `Numéro de suivi ajouté : ${trackingNumber}`,
-      } as never);
-
-      // Envoyer l'email d'expédition
-      fetch("/api/admin/orders/notify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: order.id,
-          status: "expediee",
-          trackingNumber,
-        }),
-      }).catch(() => {});
-    }
 
     await loadOrder();
   }
@@ -234,7 +247,8 @@ export default function AdminOrderDetailPage() {
     );
   }
 
-  const available = nextStatuses[order.status] || [];
+  const available = getAvailableStatuses(order.status, order.delivery_method);
+  const canShip = order.status === "payee" && order.delivery_method === "domicile";
 
   return (
     <div>
@@ -297,6 +311,40 @@ export default function AdminOrderDetailPage() {
               ))}
             </div>
           </div>
+
+          {/* Expédier la commande (livraison domicile uniquement) */}
+          {canShip && (
+            <div className="bg-white rounded-xl border border-stone-200 p-4">
+              <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+                <Truck size={16} />
+                Expédier la commande
+              </h2>
+              <p className="text-xs text-stone-500 mb-3">
+                Le numéro de suivi est obligatoire. Un email sera automatiquement envoyé au client.
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-stone-600 mb-1">
+                    Numéro de suivi *
+                  </label>
+                  <input
+                    type="text"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    placeholder="Ex: 1Z999AA10123456784"
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900"
+                  />
+                </div>
+                <button
+                  onClick={shipOrder}
+                  disabled={updating || !trackingNumber.trim()}
+                  className="w-full bg-stone-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {updating ? "Expédition en cours..." : "Marquer comme expédiée"}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Changement de statut */}
           {available.length > 0 && (
@@ -419,38 +467,38 @@ export default function AdminOrderDetailPage() {
             </div>
           )}
 
-          {/* Suivi & Notes */}
+          {/* Suivi (si déjà expédiée) */}
+          {order.tracking_number && (
+            <div className="bg-white rounded-xl border border-stone-200 p-4">
+              <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+                <Package size={16} />
+                Suivi de livraison
+              </h2>
+              <div className="text-sm">
+                <p className="text-xs text-stone-500 mb-1">Numéro de suivi</p>
+                <p className="font-mono text-stone-900 bg-stone-50 px-3 py-2 rounded border border-stone-200">
+                  {order.tracking_number}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Notes internes */}
           <div className="bg-white rounded-xl border border-stone-200 p-4">
-            <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
-              <Truck size={16} />
-              Suivi & Notes
-            </h2>
+            <h2 className="text-sm font-semibold text-stone-900 mb-3">Notes internes</h2>
             <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-stone-600 mb-1">Numéro de suivi</label>
-                <input
-                  type="text"
-                  value={trackingNumber}
-                  onChange={(e) => setTrackingNumber(e.target.value)}
-                  placeholder="Ex: 1Z999AA..."
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-stone-600 mb-1">Notes internes</label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Notes visibles uniquement par l'admin..."
-                  className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900"
-                  rows={3}
-                />
-              </div>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Notes visibles uniquement par l'admin..."
+                className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900"
+                rows={3}
+              />
               <button
                 onClick={saveOrderDetails}
                 className="w-full bg-stone-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-stone-800 transition-colors"
               >
-                Enregistrer
+                Enregistrer les notes
               </button>
             </div>
           </div>
