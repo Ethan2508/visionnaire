@@ -51,7 +51,32 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Si pas encore traitée par le webhook, vérifier directement chez Alma
+    // EN MODE SANDBOX : auto-confirmer le paiement (les paiements sandbox ne sont pas réels)
+    const isSandbox = process.env.ALMA_SANDBOX === "true";
+    
+    if (isSandbox && order.status === "en_attente_paiement") {
+      // En sandbox, on valide automatiquement le paiement
+      await supabase
+        .from("orders")
+        .update({ status: "payee" } as never)
+        .eq("id", orderId);
+
+      await supabase
+        .from("order_status_history")
+        .insert({
+          order_id: orderId,
+          status: "payee",
+          comment: `Paiement Alma confirmé (sandbox mode) — ID: ${order.alma_payment_id || 'N/A'}`,
+        } as never);
+
+      return NextResponse.json({
+        success: true,
+        orderNumber: order.order_number,
+        status: "payee",
+      });
+    }
+
+    // EN MODE PRODUCTION : vérifier directement chez Alma
     if (order.alma_payment_id) {
       const almaResponse = await fetch(`${ALMA_API_URL}/payments/${order.alma_payment_id}`, {
         headers: {
