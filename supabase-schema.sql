@@ -200,10 +200,15 @@ CREATE TABLE orders (
   -- Montants
   subtotal DECIMAL(10,2) NOT NULL,
   shipping_cost DECIMAL(10,2) NOT NULL DEFAULT 0,
+  discount_amount DECIMAL(10,2) DEFAULT 0,
   total DECIMAL(10,2) NOT NULL,
+  promo_code TEXT,
   -- Paiement
   stripe_payment_intent_id TEXT,
   alma_payment_id TEXT,
+  -- Entreprise (optionnel)
+  company_name TEXT,
+  company_siret TEXT,
   -- Adresse de livraison (snapshot)
   shipping_first_name TEXT,
   shipping_last_name TEXT,
@@ -212,6 +217,14 @@ CREATE TABLE orders (
   shipping_city TEXT,
   shipping_postal_code TEXT,
   shipping_country TEXT DEFAULT 'France',
+  -- Adresse de facturation (optionnel, si différente)
+  billing_first_name TEXT,
+  billing_last_name TEXT,
+  billing_street TEXT,
+  billing_street_2 TEXT,
+  billing_city TEXT,
+  billing_postal_code TEXT,
+  billing_country TEXT DEFAULT 'France',
   -- Suivi
   tracking_number TEXT,
   notes TEXT, -- notes internes de l'opticien

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/store/cart";
 import { formatPrice } from "@/lib/utils";
+import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
 import {
   ArrowLeft,
   ArrowRight,
@@ -41,6 +42,22 @@ export default function CheckoutPage() {
     postalCode: "",
     country: "France",
   });
+
+  // Adresse de facturation différente
+  const [differentBillingAddress, setDifferentBillingAddress] = useState(false);
+  const [billingAddress, setBillingAddress] = useState({
+    firstName: "",
+    lastName: "",
+    street: "",
+    street2: "",
+    city: "",
+    postalCode: "",
+    country: "France",
+  });
+
+  // Entreprise (optionnel)
+  const [companyName, setCompanyName] = useState("");
+  const [companySiret, setCompanySiret] = useState("");
 
   // Paiement Alma
   const [almaInstallments, setAlmaInstallments] = useState<1 | 2 | 3 | 4 | 12>(1);
@@ -158,6 +175,9 @@ export default function CheckoutPage() {
           })),
           deliveryMethod,
           shippingAddress: deliveryMethod === "domicile" ? address : null,
+          billingAddress: differentBillingAddress ? billingAddress : null,
+          companyName: companyName || null,
+          companySiret: companySiret || null,
           paymentMethod: "alma",
           promoCode: promoApplied?.code || null,
         }),
@@ -356,6 +376,40 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
+                {/* Entreprise (optionnel) */}
+                <div className="bg-white rounded-xl border border-stone-200 p-6">
+                  <h2 className="text-lg font-semibold text-stone-900 mb-4">
+                    Entreprise <span className="text-sm font-normal text-stone-400">(optionnel)</span>
+                  </h2>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 sm:col-span-1">
+                      <label className="block text-sm font-medium text-stone-700 mb-1">
+                        Nom de l&apos;entreprise
+                      </label>
+                      <input
+                        type="text"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
+                        placeholder="Ma Société SAS"
+                      />
+                    </div>
+                    <div className="col-span-2 sm:col-span-1">
+                      <label className="block text-sm font-medium text-stone-700 mb-1">
+                        N° SIRET
+                      </label>
+                      <input
+                        type="text"
+                        value={companySiret}
+                        onChange={(e) => setCompanySiret(e.target.value)}
+                        className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
+                        placeholder="123 456 789 00012"
+                        maxLength={17}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Formulaire d'adresse */}
                 {deliveryMethod === "domicile" && (
                   <div className="bg-white rounded-xl border border-stone-200 p-6">
@@ -395,15 +449,18 @@ export default function CheckoutPage() {
                         <label className="block text-sm font-medium text-stone-700 mb-1">
                           Adresse
                         </label>
-                        <input
-                          type="text"
+                        <AddressAutocomplete
                           value={address.street}
-                          onChange={(e) =>
-                            setAddress({ ...address, street: e.target.value })
-                          }
-                          required
-                          className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
-                          placeholder="123 rue de la Paix"
+                          onChange={(val) => setAddress({ ...address, street: val })}
+                          onSelect={(addr) => {
+                            setAddress({
+                              ...address,
+                              street: addr.street,
+                              city: addr.city,
+                              postalCode: addr.postalCode,
+                            });
+                          }}
+                          placeholder="Rechercher votre adresse..."
                         />
                       </div>
                       <div className="col-span-2">
@@ -452,6 +509,123 @@ export default function CheckoutPage() {
                         />
                       </div>
                     </div>
+
+                    {/* Adresse de facturation différente */}
+                    <div className="mt-6 pt-6 border-t border-stone-200">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={differentBillingAddress}
+                          onChange={(e) => setDifferentBillingAddress(e.target.checked)}
+                          className="w-4 h-4 text-stone-900 border-stone-300 rounded focus:ring-stone-900"
+                        />
+                        <span className="text-sm font-medium text-stone-700">
+                          Adresse de facturation différente
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* Formulaire adresse de facturation */}
+                    {differentBillingAddress && (
+                      <div className="mt-6 pt-6 border-t border-stone-200">
+                        <h3 className="text-base font-semibold text-stone-900 mb-4">
+                          Adresse de facturation
+                        </h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              Prénom
+                            </label>
+                            <input
+                              type="text"
+                              value={billingAddress.firstName}
+                              onChange={(e) =>
+                                setBillingAddress({ ...billingAddress, firstName: e.target.value })
+                              }
+                              required
+                              className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              Nom
+                            </label>
+                            <input
+                              type="text"
+                              value={billingAddress.lastName}
+                              onChange={(e) =>
+                                setBillingAddress({ ...billingAddress, lastName: e.target.value })
+                              }
+                              required
+                              className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              Adresse
+                            </label>
+                            <AddressAutocomplete
+                              value={billingAddress.street}
+                              onChange={(val) => setBillingAddress({ ...billingAddress, street: val })}
+                              onSelect={(addr) => {
+                                setBillingAddress({
+                                  ...billingAddress,
+                                  street: addr.street,
+                                  city: addr.city,
+                                  postalCode: addr.postalCode,
+                                });
+                              }}
+                              placeholder="Rechercher votre adresse..."
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              Complément d&apos;adresse
+                            </label>
+                            <input
+                              type="text"
+                              value={billingAddress.street2}
+                              onChange={(e) =>
+                                setBillingAddress({ ...billingAddress, street2: e.target.value })
+                              }
+                              className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
+                              placeholder="Appartement, étage..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              Code postal
+                            </label>
+                            <input
+                              type="text"
+                              value={billingAddress.postalCode}
+                              onChange={(e) =>
+                                setBillingAddress({
+                                  ...billingAddress,
+                                  postalCode: e.target.value,
+                                })
+                              }
+                              required
+                              className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              Ville
+                            </label>
+                            <input
+                              type="text"
+                              value={billingAddress.city}
+                              onChange={(e) =>
+                                setBillingAddress({ ...billingAddress, city: e.target.value })
+                              }
+                              required
+                              className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent text-stone-900"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -496,13 +670,20 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                   <p className="text-sm text-stone-600 mb-3">Choisissez votre échéancier :</p>
-                  <div className="grid grid-cols-5 gap-2">
-                    {([1, 2, 3, 4, 12] as const).map((n) => (
+                  <div className="flex flex-wrap gap-2">
+                    {([1, 2, 3, 4, 12] as const)
+                      .filter((n) => {
+                        // Alma minimums : 1× = 1€, 2-4× = 50€, 12× = 200€
+                        if (n === 1) return true;
+                        if (n <= 4) return finalTotal >= 50;
+                        return finalTotal >= 200; // 12×
+                      })
+                      .map((n) => (
                       <button
                         key={n}
                         type="button"
                         onClick={() => setAlmaInstallments(n)}
-                        className={`py-3 px-2 rounded-xl text-center transition-all ${
+                        className={`flex-1 min-w-[60px] py-3 px-2 rounded-xl text-center transition-all ${
                           almaInstallments === n
                             ? "bg-stone-900 text-white ring-2 ring-stone-900 ring-offset-2"
                             : "bg-stone-50 text-stone-700 border border-stone-200 hover:border-stone-400 hover:bg-stone-100"

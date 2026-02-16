@@ -15,6 +15,7 @@ import {
   Clock,
   MapPin,
   User,
+  FileText,
 } from "lucide-react";
 
 interface OrderItem {
@@ -311,6 +312,21 @@ export default function AdminOrderDetailPage() {
               ))}
             </div>
           </div>
+
+          {/* Télécharger la facture */}
+          {order.status !== "en_attente_paiement" && order.status !== "annulee" && (
+            <div className="bg-white rounded-xl border border-stone-200 p-4">
+              <a
+                href={`/api/orders/${order.id}/invoice`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full bg-stone-100 text-stone-900 px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-stone-200 transition-colors"
+              >
+                <FileText size={16} />
+                Télécharger la facture
+              </a>
+            </div>
+          )}
 
           {/* Expédier la commande (livraison domicile uniquement) */}
           {canShip && (

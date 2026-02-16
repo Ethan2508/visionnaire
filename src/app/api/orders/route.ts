@@ -36,7 +36,16 @@ interface OrderItemInsert {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { items, deliveryMethod, shippingAddress, paymentMethod, promoCode } = body;
+  const { 
+    items, 
+    deliveryMethod, 
+    shippingAddress, 
+    billingAddress, 
+    companyName, 
+    companySiret, 
+    paymentMethod, 
+    promoCode 
+  } = body;
 
   // Créer le client Supabase (sans generic Database pour éviter l'incompatibilité PostgREST v12)
   const cookiesToSet: { name: string; value: string; options: CookieOptions }[] = [];
@@ -180,6 +189,19 @@ export async function POST(request: Request) {
   // Ajouter les champs optionnels (colonnes qui peuvent ne pas encore exister)
   if (discountAmount > 0) orderData.discount_amount = discountAmount;
   if (promoCode) orderData.promo_code = promoCode;
+  if (companyName) orderData.company_name = companyName;
+  if (companySiret) orderData.company_siret = companySiret;
+  
+  // Adresse de facturation (si différente)
+  if (billingAddress) {
+    orderData.billing_first_name = billingAddress.firstName || null;
+    orderData.billing_last_name = billingAddress.lastName || null;
+    orderData.billing_street = billingAddress.street || null;
+    orderData.billing_street_2 = billingAddress.street2 || null;
+    orderData.billing_city = billingAddress.city || null;
+    orderData.billing_postal_code = billingAddress.postalCode || null;
+    orderData.billing_country = billingAddress.country || "France";
+  }
 
   const { data: order, error: orderError } = await supabase
     .from("orders")

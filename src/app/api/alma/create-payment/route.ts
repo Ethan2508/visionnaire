@@ -48,7 +48,19 @@ export async function POST(request: NextRequest) {
     // Alma attend les montants en centimes
     const purchaseAmountCents = Math.round(order.total * 100);
 
-    const almaPayload = {
+    // Construire customer sans champs undefined (Alma rejette les champs undefined)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const customer: Record<string, any> = {
+      first_name: order.profiles?.first_name || order.shipping_first_name || "Client",
+      last_name: order.profiles?.last_name || order.shipping_last_name || "Visionnaire",
+      email: order.profiles?.email || user.email || "",
+    };
+    if (order.profiles?.phone) {
+      customer.phone = order.profiles.phone;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const almaPayload: Record<string, any> = {
       payment: {
         purchase_amount: purchaseAmountCents,
         installments_count: installments,
@@ -61,30 +73,37 @@ export async function POST(request: NextRequest) {
           order_number: order.order_number,
         },
       },
-      customer: {
-        first_name: order.profiles?.first_name || "",
-        last_name: order.profiles?.last_name || "",
-        email: order.profiles?.email || user.email || "",
-        phone: order.profiles?.phone || undefined,
-      },
+      customer,
       order: {
         merchant_reference: order.order_number,
       },
     };
 
-    // Si adresse de livraison disponible
+    // Si adresse de livraison disponible (domicile)
     if (order.shipping_street) {
-      Object.assign(almaPayload, {
-        shipping_address: {
-          first_name: order.shipping_first_name,
-          last_name: order.shipping_last_name,
-          line1: order.shipping_street,
-          line2: order.shipping_street_2 || undefined,
-          postal_code: order.shipping_postal_code,
-          city: order.shipping_city,
-          country: order.shipping_country || "FR",
-        },
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const shippingAddress: Record<string, any> = {
+        first_name: order.shipping_first_name,
+        last_name: order.shipping_last_name,
+        line1: order.shipping_street,
+        postal_code: order.shipping_postal_code,
+        city: order.shipping_city,
+        country: order.shipping_country || "FR",
+      };
+      if (order.shipping_street_2) {
+        shippingAddress.line2 = order.shipping_street_2;
+      }
+      almaPayload.shipping_address = shippingAddress;
+    } else if (order.delivery_method === "boutique") {
+      // Pour retrait boutique, envoyer l'adresse de la boutique
+      almaPayload.shipping_address = {
+        first_name: customer.first_name,
+        last_name: customer.last_name,
+        line1: "44 Cours Franklin Roosevelt",
+        postal_code: "69006",
+        city: "Lyon",
+        country: "FR",
+      };
     }
 
     const almaResponse = await fetch(`${ALMA_API_URL}/payments`, {

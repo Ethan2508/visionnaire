@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice, categoryLabel } from "@/lib/utils";
-import { ShoppingBag, ChevronRight, ChevronLeft, Check, Search } from "lucide-react";
+import { ShoppingBag, ChevronRight, ChevronLeft, Check, Search, X } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart";
 
 interface Variant {
@@ -48,6 +48,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
 
   // Zoom state
   const [isZooming, setIsZooming] = useState(false);
@@ -281,23 +282,13 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                 quantity: 1,
                 category: product.category,
               });
-              setAddedToCart(true);
-              setTimeout(() => setAddedToCart(false), 2000);
+              setShowCartModal(true);
             }}
             disabled={!selectedVariant || selectedVariant.stock_quantity === 0}
             className="inline-flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-stone-800 transition-colors mt-6 w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {addedToCart ? (
-              <>
-                <Check size={18} />
-                Ajouté au panier !
-              </>
-            ) : (
-              <>
-                <ShoppingBag size={18} />
-                Ajouter au panier
-              </>
-            )}
+            <ShoppingBag size={18} />
+            Ajouter au panier
           </button>
 
           {/* Description */}
@@ -326,6 +317,56 @@ export default function ProductDetailClient({ product }: { product: Product }) {
           )}
         </div>
       </div>
+
+      {/* Modal ajout panier */}
+      {showCartModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Overlay */}
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowCartModal(false)}
+          />
+          {/* Modal */}
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setShowCartModal(false)}
+              className="absolute top-4 right-4 p-1 text-stone-400 hover:text-stone-600 transition-colors"
+              aria-label="Fermer"
+            >
+              <X size={20} />
+            </button>
+            
+            {/* Icône succès */}
+            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check size={32} className="text-emerald-600" />
+            </div>
+            
+            <h3 className="text-xl font-semibold text-stone-900 text-center mb-2">
+              Article ajouté au panier !
+            </h3>
+            <p className="text-sm text-stone-500 text-center mb-6">
+              {product.name}
+              {selectedVariant && ` — ${selectedVariant.color_name}`}
+            </p>
+            
+            {/* Boutons */}
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/panier"
+                className="w-full bg-stone-900 text-white py-3 rounded-lg font-medium text-center hover:bg-stone-800 transition-colors"
+              >
+                Voir mon panier
+              </Link>
+              <button
+                onClick={() => setShowCartModal(false)}
+                className="w-full bg-stone-100 text-stone-900 py-3 rounded-lg font-medium hover:bg-stone-200 transition-colors"
+              >
+                Continuer mes achats
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
