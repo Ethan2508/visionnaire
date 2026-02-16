@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "orderId et installments requis" }, { status: 400 });
     }
 
-    if (![2, 3, 4].includes(installments)) {
-      return NextResponse.json({ error: "Nombre d'échéances invalide (2, 3 ou 4)" }, { status: 400 });
+    if (![1, 2, 3, 4, 12].includes(installments)) {
+      return NextResponse.json({ error: "Nombre d'échéances invalide (1, 2, 3, 4 ou 12)" }, { status: 400 });
     }
 
     const supabase = await createClient();

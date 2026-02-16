@@ -42,9 +42,8 @@ export default function CheckoutPage() {
     country: "France",
   });
 
-  // Paiement
-  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "alma">("stripe");
-  const [almaInstallments, setAlmaInstallments] = useState<2 | 3 | 4>(3);
+  // Paiement Alma
+  const [almaInstallments, setAlmaInstallments] = useState<1 | 2 | 3 | 4 | 12>(1);
 
   // Code promo
   const [promoCode, setPromoCode] = useState("");
@@ -155,7 +154,7 @@ export default function CheckoutPage() {
           })),
           deliveryMethod,
           shippingAddress: deliveryMethod === "domicile" ? address : null,
-          paymentMethod: paymentMethod === "alma" ? "alma" : "stripe",
+          paymentMethod: "alma",
           promoCode: promoApplied?.code || null,
         }),
       });
@@ -168,35 +167,26 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Paiement Alma : créer le paiement et rediriger
-      if (paymentMethod === "alma") {
-        const almaRes = await fetch("/api/alma/create-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId: data.orderId,
-            installments: almaInstallments,
-          }),
-        });
+      // Créer le paiement Alma et rediriger
+      const almaRes = await fetch("/api/alma/create-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: data.orderId,
+          installments: almaInstallments,
+        }),
+      });
 
-        const almaData = await almaRes.json();
+      const almaData = await almaRes.json();
 
-        if (!almaRes.ok) {
-          setError(almaData.error || "Erreur lors de la création du paiement Alma");
-          setLoading(false);
-          return;
-        }
-
-        // Rediriger vers la page de paiement Alma
-        window.location.href = almaData.paymentUrl;
+      if (!almaRes.ok) {
+        setError(almaData.error || "Erreur lors de la création du paiement Alma");
+        setLoading(false);
         return;
       }
 
-      // Paiement par carte (Stripe) — pour l'instant simulation
-      // TODO: Intégrer Stripe Checkout
-      clearCart();
-      setStep("confirmation");
-      setLoading(false);
+      // Rediriger vers la page de paiement Alma
+      window.location.href = almaData.paymentUrl;
     } catch {
       setError("Une erreur est survenue. Veuillez réessayer.");
       setLoading(false);
@@ -492,84 +482,40 @@ export default function CheckoutPage() {
                   <h2 className="text-lg font-semibold text-stone-900 mb-4">
                     Moyen de paiement
                   </h2>
-                  <div className="space-y-3">
-                    <label
-                      className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                        paymentMethod === "stripe"
-                          ? "border-stone-900 bg-stone-50"
-                          : "border-stone-200 hover:border-stone-300"
-                      }`}
-                      onClick={() => setPaymentMethod("stripe")}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="stripe"
-                        checked={paymentMethod === "stripe"}
-                        onChange={() => setPaymentMethod("stripe")}
-                        className="sr-only"
-                      />
-                      <CreditCard size={20} className={paymentMethod === "stripe" ? "text-stone-900" : "text-stone-400"} />
-                      <div>
-                        <p className="font-medium text-stone-900">
-                          Carte bancaire
-                        </p>
-                        <p className="text-sm text-stone-500">
-                          Visa, Mastercard, American Express
-                        </p>
-                      </div>
-                    </label>
-                    <label
-                      className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                        paymentMethod === "alma"
-                          ? "border-stone-900 bg-stone-50"
-                          : "border-stone-200 hover:border-stone-300"
-                      }`}
-                      onClick={() => setPaymentMethod("alma")}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="alma"
-                        checked={paymentMethod === "alma"}
-                        onChange={() => setPaymentMethod("alma")}
-                        className="sr-only"
-                      />
-                      <div className="w-5 h-5 bg-gradient-to-br from-purple-500 to-pink-500 rounded mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <p className="font-medium text-stone-900">
-                          Alma — Paiement en plusieurs fois
-                        </p>
-                        <p className="text-sm text-stone-500 mb-3">
-                          Payez en 2x, 3x ou 4x sans frais
-                        </p>
-                        {paymentMethod === "alma" && (
-                          <div className="grid grid-cols-3 gap-2">
-                            {([2, 3, 4] as const).map((n) => (
-                              <button
-                                key={n}
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setAlmaInstallments(n);
-                                }}
-                                className={`py-2 px-3 rounded-lg text-center text-sm font-medium transition-colors ${
-                                  almaInstallments === n
-                                    ? "bg-stone-900 text-white"
-                                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
-                                }`}
-                              >
-                                <span className="block text-base font-semibold">{n}×</span>
-                                <span className="block text-xs mt-0.5 opacity-80">
-                                  {formatPrice(finalTotal / n)}/mois
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </label>
+                  <div className="flex items-center gap-3 mb-5 pb-4 border-b border-stone-100">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                      <CreditCard size={16} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-stone-900">Paiement sécurisé par Alma</p>
+                      <p className="text-xs text-stone-500">Carte bancaire — Visa, Mastercard, CB</p>
+                    </div>
                   </div>
+                  <p className="text-sm text-stone-600 mb-3">Choisissez votre échéancier :</p>
+                  <div className="grid grid-cols-5 gap-2">
+                    {([1, 2, 3, 4, 12] as const).map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setAlmaInstallments(n)}
+                        className={`py-3 px-2 rounded-xl text-center transition-all ${
+                          almaInstallments === n
+                            ? "bg-stone-900 text-white ring-2 ring-stone-900 ring-offset-2"
+                            : "bg-stone-50 text-stone-700 border border-stone-200 hover:border-stone-400 hover:bg-stone-100"
+                        }`}
+                      >
+                        <span className="block text-lg font-bold">{n === 1 ? "1×" : `${n}×`}</span>
+                        <span className={`block text-xs mt-1 ${almaInstallments === n ? "text-stone-300" : "text-stone-500"}`}>
+                          {n === 1 ? "Comptant" : `${formatPrice(finalTotal / n)}/mois`}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  {almaInstallments > 1 && (
+                    <p className="text-xs text-stone-500 mt-3 text-center">
+                      {almaInstallments}× {formatPrice(finalTotal / almaInstallments)} — Total : {formatPrice(finalTotal)}
+                    </p>
+                  )}
                 </div>
 
                 {error && (
