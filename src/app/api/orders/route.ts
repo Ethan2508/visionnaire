@@ -73,7 +73,8 @@ export async function POST(request: Request) {
 
   // Calculer les totaux
   let subtotal = 0;
-  const orderItems: Omit<OrderItemInsert, "order_id">[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const orderItems: Record<string, any>[] = [];
 
   for (const item of items) {
     const { data: variant } = await supabase
@@ -92,7 +93,8 @@ export async function POST(request: Request) {
     const itemTotal = (unitPrice + lensPrice) * item.quantity;
     subtotal += itemTotal;
 
-    orderItems.push({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const orderItem: Record<string, any> = {
       variant_id: item.variantId,
       product_name: item.productName,
       variant_info: `${item.colorName}${item.size ? ` - ${item.size}` : ""}`,
@@ -102,8 +104,9 @@ export async function POST(request: Request) {
       lens_options_summary: item.lensOptions?.map((o: { name: string }) => o.name).join(", ") || null,
       lens_options_price: lensPrice || 0,
       prescription_url: item.prescriptionUrl || null,
-      prescription_data: item.prescriptionData || null,
-    });
+    };
+    if (item.prescriptionData) orderItem.prescription_data = item.prescriptionData;
+    orderItems.push(orderItem);
   }
 
   // Promo code discount
@@ -143,17 +146,16 @@ export async function POST(request: Request) {
   const orderNumber = `VO-${year}-${String((count || 0) + 1).padStart(4, "0")}`;
 
   // Créer la commande
-  const orderData: OrderInsert = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const orderData: Record<string, any> = {
     order_number: orderNumber,
     profile_id: user.id,
     status: "en_attente_paiement",
     delivery_method: deliveryMethod || "domicile",
-    payment_method: paymentMethod || "stripe",
+    payment_method: paymentMethod || "alma",
     subtotal,
-    discount_amount: discountAmount,
     shipping_cost: shippingCost,
     total,
-    promo_code: promoCode || null,
     shipping_first_name: shippingAddress?.firstName || null,
     shipping_last_name: shippingAddress?.lastName || null,
     shipping_street: shippingAddress?.street || null,
@@ -162,6 +164,10 @@ export async function POST(request: Request) {
     shipping_postal_code: shippingAddress?.postalCode || null,
     shipping_country: shippingAddress?.country || "France",
   };
+
+  // Ajouter les champs optionnels (colonnes qui peuvent ne pas encore exister)
+  if (discountAmount > 0) orderData.discount_amount = discountAmount;
+  if (promoCode) orderData.promo_code = promoCode;
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
@@ -177,7 +183,7 @@ export async function POST(request: Request) {
   const o = order as { id: string; order_number: string };
 
   // Créer les articles de la commande
-  const itemsWithOrderId: OrderItemInsert[] = orderItems.map((item) => ({
+  const itemsWithOrderId = orderItems.map((item) => ({
     ...item,
     order_id: o.id,
   }));

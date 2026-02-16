@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
           .insert({
             order_id: orderId,
             status: newStatus,
-            note: `Paiement Alma confirmé (${almaState}) — ID: ${paymentId}`,
+            comment: `Paiement Alma confirmé (${almaState}) — ID: ${paymentId}`,
           } as never);
 
         console.log(`[ALMA WEBHOOK] Order ${orderId} updated to ${newStatus}`);

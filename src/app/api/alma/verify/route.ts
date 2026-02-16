@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
               .insert({
                 order_id: orderId,
                 status: "payee",
-                note: `Paiement Alma confirmé (vérifié au retour) — ID: ${order.alma_payment_id}`,
+                comment: `Paiement Alma confirmé (vérifié au retour) — ID: ${order.alma_payment_id}`,
               } as never);
           }
 
