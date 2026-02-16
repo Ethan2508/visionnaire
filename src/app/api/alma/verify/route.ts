@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 const ALMA_API_KEY = process.env.ALMA_API_KEY!;
-const ALMA_API_URL = "https://api.getalma.eu/v1";
+const ALMA_API_URL = process.env.ALMA_SANDBOX === "true"
+  ? "https://api.sandbox.getalma.eu/v1"
+  : "https://api.getalma.eu/v1";
 
 export async function GET(request: NextRequest) {
   try {
