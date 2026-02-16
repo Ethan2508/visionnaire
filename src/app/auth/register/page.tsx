@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptCGV, setAcceptCGV] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,12 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    if (!acceptCGV) {
+      setError("Vous devez accepter les CGV pour créer un compte.");
+      setLoading(false);
+      return;
+    }
 
     if (password.length < 6) {
       setError("Le mot de passe doit contenir au moins 6 caracteres.");
@@ -163,7 +170,28 @@ export default function RegisterPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-              >
+           div className="flex items-start gap-2">
+            <input
+              id="accept-cgv"
+              type="checkbox"
+              checked={acceptCGV}
+              onChange={(e) => setAcceptCGV(e.target.checked)}
+              className="mt-1 rounded border-stone-300 text-stone-900 focus:ring-2 focus:ring-stone-900"
+              required
+            />
+            <label htmlFor="accept-cgv" className="text-sm text-stone-600">
+              J&apos;accepte les{" "}
+              <Link href="/cgv" target="_blank" className="text-stone-900 font-medium hover:underline">
+                Conditions Générales de Vente
+              </Link>
+              {" "}et la{" "}
+              <Link href="/confidentialite" target="_blank" className="text-stone-900 font-medium hover:underline">
+                Politique de Confidentialité
+              </Link>
+            </label>
+          </div>
+
+          <   >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>

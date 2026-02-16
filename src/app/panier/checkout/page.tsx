@@ -44,6 +44,9 @@ export default function CheckoutPage() {
 
   // Paiement Alma
   const [almaInstallments, setAlmaInstallments] = useState<1 | 2 | 3 | 4 | 12>(1);
+  
+  // CGV
+  const [acceptCGV, setAcceptCGV] = useState(false);
 
   // Code promo
   const [promoCode, setPromoCode] = useState("");
@@ -123,6 +126,12 @@ export default function CheckoutPage() {
 
   async function handleSubmitOrder() {
     setError(null);
+    
+    if (!acceptCGV) {
+      setError("Vous devez accepter les CGV pour finaliser votre commande.");
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -518,6 +527,36 @@ export default function CheckoutPage() {
                     {error}
                   </div>
                 )}
+
+                {/* Acceptation CGV */}
+                <div className="flex items-start gap-3 p-4 bg-stone-50 rounded-lg border border-stone-200">
+                  <input
+                    id="accept-cgv"
+                    type="checkbox"
+                    checked={acceptCGV}
+                    onChange={(e) => setAcceptCGV(e.target.checked)}
+                    required
+                    className="mt-0.5 w-4 h-4 text-stone-900 border-stone-300 rounded focus:ring-stone-900"
+                  />
+                  <label htmlFor="accept-cgv" className="text-sm text-stone-600">
+                    J&apos;accepte les{" "}
+                    <Link
+                      href="/cgv"
+                      target="_blank"
+                      className="text-stone-900 underline hover:text-stone-700"
+                    >
+                      Conditions Générales de Vente
+                    </Link>{" "}
+                    et la{" "}
+                    <Link
+                      href="/confidentialite"
+                      target="_blank"
+                      className="text-stone-900 underline hover:text-stone-700"
+                    >
+                      Politique de Confidentialité
+                    </Link>.
+                  </label>
+                </div>
 
                 <div className="flex gap-3">
                   <button

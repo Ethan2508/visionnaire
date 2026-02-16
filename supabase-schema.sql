@@ -373,6 +373,7 @@ CREATE POLICY "Users can manage own addresses" ON addresses FOR ALL USING (profi
 
 -- Orders : chacun les siennes, admin voit tout
 CREATE POLICY "Users can view own orders" ON orders FOR SELECT USING (profile_id = auth.uid());
+CREATE POLICY "Users can create own orders" ON orders FOR INSERT WITH CHECK (profile_id = auth.uid());
 CREATE POLICY "Admin can manage all orders" ON orders FOR ALL USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
 );
@@ -381,7 +382,21 @@ CREATE POLICY "Admin can manage all orders" ON orders FOR ALL USING (
 CREATE POLICY "Users can view own order items" ON order_items FOR SELECT USING (
   EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.profile_id = auth.uid())
 );
+CREATE POLICY "Users can create own order items" ON order_items FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.profile_id = auth.uid())
+);
 CREATE POLICY "Admin can manage all order items" ON order_items FOR ALL USING (
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- Order status history : via la commande
+CREATE POLICY "Users can view own order history" ON order_status_history FOR SELECT USING (
+  EXISTS (SELECT 1 FROM orders WHERE orders.id = order_status_history.order_id AND orders.profile_id = auth.uid())
+);
+CREATE POLICY "Users can create order history" ON order_status_history FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM orders WHERE orders.id = order_status_history.order_id AND orders.profile_id = auth.uid())
+);
+CREATE POLICY "Admin can manage order history" ON order_status_history FOR ALL USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
 );
 
