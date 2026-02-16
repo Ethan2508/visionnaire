@@ -31,7 +31,7 @@ interface Order {
   id: string;
   order_number: string;
   status: string;
-  total_amount: number;
+  total: number;
   created_at: string;
 }
 
@@ -396,7 +396,7 @@ export default function ComptePage() {
                           {status.label}
                         </span>
                         <p className="font-semibold text-stone-900">
-                          {formatPrice(order.total_amount)}
+                          {formatPrice(order.total)}
                         </p>
                         <ChevronRight
                           size={16}

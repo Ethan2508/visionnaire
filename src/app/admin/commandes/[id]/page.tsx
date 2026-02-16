@@ -287,7 +287,7 @@ export default function AdminOrderDetailPage() {
                   </div>
 
                   {/* Corrections manuelles */}
-                  {item.prescription_data && (
+                  {item.prescription_data && item.prescription_data.od && item.prescription_data.og && (
                     <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                       <p className="text-xs font-medium text-blue-800 mb-2 flex items-center gap-1">
                         <FileText size={14} />
@@ -298,10 +298,10 @@ export default function AdminOrderDetailPage() {
                           <div key={eye} className="text-xs">
                             <p className="font-semibold text-blue-900 mb-1">{eye === 'od' ? 'Œil droit (OD)' : 'Œil gauche (OG)'}</p>
                             <div className="grid grid-cols-2 gap-1 text-blue-700">
-                              <span>SPH: {item.prescription_data![eye].sph || '—'}</span>
-                              <span>CYL: {item.prescription_data![eye].cyl || '—'}</span>
-                              <span>AXE: {item.prescription_data![eye].axe || '—'}</span>
-                              <span>ADD: {item.prescription_data![eye].add || '—'}</span>
+                              <span>SPH: {item.prescription_data?.[eye]?.sph || '—'}</span>
+                              <span>CYL: {item.prescription_data?.[eye]?.cyl || '—'}</span>
+                              <span>AXE: {item.prescription_data?.[eye]?.axe || '—'}</span>
+                              <span>ADD: {item.prescription_data?.[eye]?.add || '—'}</span>
                             </div>
                           </div>
                         ))}

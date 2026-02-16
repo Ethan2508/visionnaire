@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       .order("is_default", { ascending: false }),
     admin
       .from("orders")
-      .select("id, order_number, status, total_amount, created_at")
+      .select("id, order_number, status, total, created_at")
       .eq("profile_id", user.id)
       .order("created_at", { ascending: false })
       .limit(10),
