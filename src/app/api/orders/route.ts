@@ -312,7 +312,7 @@ export async function POST(request: Request) {
 
         await getResend().emails.send({
           from: EMAIL_FROM,
-          to: "contact@visionnairesopticiens.fr",
+          to: ["contact@visionnairesopticiens.fr", "visionnaires@orange.fr"],
           subject: adminEmailData.subject,
           html: adminEmailData.html,
         });
