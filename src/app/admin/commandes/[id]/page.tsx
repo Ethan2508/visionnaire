@@ -19,6 +19,21 @@ import {
   ExternalLink,
 } from "lucide-react";
 
+interface EyeCorrection {
+  sph: string;
+  cyl: string;
+  axe: string;
+  add: string;
+}
+
+interface PrescriptionData {
+  method: string;
+  visionType: string;
+  od: EyeCorrection;
+  og: EyeCorrection;
+  pupillaryDistance: string;
+}
+
 interface OrderItem {
   id: string;
   product_name: string;
@@ -30,6 +45,7 @@ interface OrderItem {
   lens_options_price: number | null;
   prescription_url: string | null;
   prescription_validated: boolean | null;
+  prescription_data: PrescriptionData | null;
 }
 
 interface StatusHistory {
@@ -269,6 +285,32 @@ export default function AdminOrderDetailPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Corrections manuelles */}
+                  {item.prescription_data && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                      <p className="text-xs font-medium text-blue-800 mb-2 flex items-center gap-1">
+                        <FileText size={14} />
+                        Corrections saisies ({item.prescription_data.visionType === 'simple' ? 'Vision simple' : item.prescription_data.visionType === 'progressive' ? 'Progressive' : item.prescription_data.visionType})
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {(['od', 'og'] as const).map((eye) => (
+                          <div key={eye} className="text-xs">
+                            <p className="font-semibold text-blue-900 mb-1">{eye === 'od' ? 'Œil droit (OD)' : 'Œil gauche (OG)'}</p>
+                            <div className="grid grid-cols-2 gap-1 text-blue-700">
+                              <span>SPH: {item.prescription_data![eye].sph || '—'}</span>
+                              <span>CYL: {item.prescription_data![eye].cyl || '—'}</span>
+                              <span>AXE: {item.prescription_data![eye].axe || '—'}</span>
+                              <span>ADD: {item.prescription_data![eye].add || '—'}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {item.prescription_data.pupillaryDistance && (
+                        <p className="text-xs text-blue-600 mt-2">Écart pupillaire : {item.prescription_data.pupillaryDistance} mm</p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Ordonnance */}
                   {item.prescription_url && (

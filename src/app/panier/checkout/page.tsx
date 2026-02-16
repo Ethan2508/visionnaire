@@ -14,6 +14,8 @@ import {
   ShoppingBag,
   Loader2,
   Check,
+  Tag,
+  X,
 } from "lucide-react";
 
 type Step = "livraison" | "paiement" | "confirmation";
@@ -40,6 +42,21 @@ export default function CheckoutPage() {
     country: "France",
   });
 
+  // Paiement
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "alma">("stripe");
+  const [almaInstallments, setAlmaInstallments] = useState<2 | 3 | 4>(3);
+
+  // Code promo
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState<{
+    code: string;
+    discount_type: "percentage" | "fixed";
+    discount_value: number;
+    name: string;
+  } | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -64,7 +81,47 @@ export default function CheckoutPage() {
   const lensTotal = getLensTotal();
   const total = getTotal();
   const shippingCost = deliveryMethod === "domicile" && total < 150 ? 6.9 : 0;
-  const finalTotal = total + shippingCost;
+
+  // Calcul discount
+  let discount = 0;
+  if (promoApplied) {
+    if (promoApplied.discount_type === "percentage") {
+      discount = total * (promoApplied.discount_value / 100);
+    } else {
+      discount = Math.min(promoApplied.discount_value, total);
+    }
+  }
+  const finalTotal = total - discount + shippingCost;
+
+  async function applyPromoCode() {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError(null);
+    try {
+      const res = await fetch("/api/promotions/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: promoCode.trim().toUpperCase(), orderTotal: total }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPromoError(data.error || "Code invalide");
+        setPromoApplied(null);
+      } else {
+        setPromoApplied(data.promotion);
+        setPromoError(null);
+      }
+    } catch {
+      setPromoError("Erreur de validation");
+    }
+    setPromoLoading(false);
+  }
+
+  function removePromo() {
+    setPromoApplied(null);
+    setPromoCode("");
+    setPromoError(null);
+  }
 
   async function handleSubmitOrder() {
     setError(null);
@@ -94,10 +151,12 @@ export default function CheckoutPage() {
             lensType: item.lensType,
             lensOptions: item.lensOptions,
             prescriptionUrl: item.prescriptionUrl,
+            prescriptionData: item.prescriptionData,
           })),
           deliveryMethod,
           shippingAddress: deliveryMethod === "domicile" ? address : null,
-          paymentMethod: "stripe",
+          paymentMethod: paymentMethod === "alma" ? "alma" : "stripe",
+          promoCode: promoApplied?.code || null,
         }),
       });
 
@@ -109,8 +168,32 @@ export default function CheckoutPage() {
         return;
       }
 
-      // TODO: Rediriger vers Stripe Checkout
-      // Pour l'instant, on simule le paiement
+      // Paiement Alma : créer le paiement et rediriger
+      if (paymentMethod === "alma") {
+        const almaRes = await fetch("/api/alma/create-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: data.orderId,
+            installments: almaInstallments,
+          }),
+        });
+
+        const almaData = await almaRes.json();
+
+        if (!almaRes.ok) {
+          setError(almaData.error || "Erreur lors de la création du paiement Alma");
+          setLoading(false);
+          return;
+        }
+
+        // Rediriger vers la page de paiement Alma
+        window.location.href = almaData.paymentUrl;
+        return;
+      }
+
+      // Paiement par carte (Stripe) — pour l'instant simulation
+      // TODO: Intégrer Stripe Checkout
       clearCart();
       setStep("confirmation");
       setLoading(false);
@@ -410,8 +493,23 @@ export default function CheckoutPage() {
                     Moyen de paiement
                   </h2>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-4 p-4 rounded-lg border-2 border-stone-900 bg-stone-50">
-                      <CreditCard size={20} className="text-stone-900" />
+                    <label
+                      className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                        paymentMethod === "stripe"
+                          ? "border-stone-900 bg-stone-50"
+                          : "border-stone-200 hover:border-stone-300"
+                      }`}
+                      onClick={() => setPaymentMethod("stripe")}
+                    >
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="stripe"
+                        checked={paymentMethod === "stripe"}
+                        onChange={() => setPaymentMethod("stripe")}
+                        className="sr-only"
+                      />
+                      <CreditCard size={20} className={paymentMethod === "stripe" ? "text-stone-900" : "text-stone-400"} />
                       <div>
                         <p className="font-medium text-stone-900">
                           Carte bancaire
@@ -420,18 +518,57 @@ export default function CheckoutPage() {
                           Visa, Mastercard, American Express
                         </p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-4 p-4 rounded-lg border-2 border-stone-200 opacity-60 cursor-not-allowed">
-                      <div className="w-5 h-5 bg-gradient-to-br from-purple-500 to-pink-500 rounded" />
-                      <div>
+                    </label>
+                    <label
+                      className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
+                        paymentMethod === "alma"
+                          ? "border-stone-900 bg-stone-50"
+                          : "border-stone-200 hover:border-stone-300"
+                      }`}
+                      onClick={() => setPaymentMethod("alma")}
+                    >
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="alma"
+                        checked={paymentMethod === "alma"}
+                        onChange={() => setPaymentMethod("alma")}
+                        className="sr-only"
+                      />
+                      <div className="w-5 h-5 bg-gradient-to-br from-purple-500 to-pink-500 rounded mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
                         <p className="font-medium text-stone-900">
-                          Alma — Paiement en 2x 3x 4x
+                          Alma — Paiement en plusieurs fois
                         </p>
-                        <p className="text-sm text-stone-500">
-                          Bientôt disponible
+                        <p className="text-sm text-stone-500 mb-3">
+                          Payez en 2x, 3x ou 4x sans frais
                         </p>
+                        {paymentMethod === "alma" && (
+                          <div className="grid grid-cols-3 gap-2">
+                            {([2, 3, 4] as const).map((n) => (
+                              <button
+                                key={n}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAlmaInstallments(n);
+                                }}
+                                className={`py-2 px-3 rounded-lg text-center text-sm font-medium transition-colors ${
+                                  almaInstallments === n
+                                    ? "bg-stone-900 text-white"
+                                    : "bg-stone-100 text-stone-700 hover:bg-stone-200"
+                                }`}
+                              >
+                                <span className="block text-base font-semibold">{n}×</span>
+                                <span className="block text-xs mt-0.5 opacity-80">
+                                  {formatPrice(finalTotal / n)}/mois
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    </label>
                   </div>
                 </div>
 
@@ -518,10 +655,52 @@ export default function CheckoutPage() {
               </div>
 
               <div className="border-t border-stone-100 pt-3 space-y-2 text-sm">
+                {/* Code promo */}
+                <div className="pb-2">
+                  {promoApplied ? (
+                    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <Tag size={14} className="text-green-600" />
+                        <span className="text-sm font-medium text-green-800">{promoApplied.code}</span>
+                        <span className="text-xs text-green-600">
+                          (-{promoApplied.discount_type === "percentage" ? `${promoApplied.discount_value}%` : formatPrice(promoApplied.discount_value)})
+                        </span>
+                      </div>
+                      <button onClick={removePromo} className="text-green-600 hover:text-green-800"><X size={14} /></button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                          placeholder="Code promo"
+                          className="flex-1 px-3 py-1.5 border border-stone-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-stone-900 font-mono"
+                        />
+                        <button
+                          onClick={applyPromoCode}
+                          disabled={promoLoading || !promoCode.trim()}
+                          className="px-3 py-1.5 bg-stone-900 text-white rounded-lg text-xs font-medium hover:bg-stone-800 transition-colors disabled:opacity-50"
+                        >
+                          {promoLoading ? "…" : "Appliquer"}
+                        </button>
+                      </div>
+                      {promoError && <p className="text-xs text-red-600 mt-1">{promoError}</p>}
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex justify-between text-stone-600">
                   <span>Sous-total</span>
                   <span>{formatPrice(subtotal + lensTotal)}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Réduction</span>
+                    <span>-{formatPrice(discount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-stone-600">
                   <span>Livraison</span>
                   <span>

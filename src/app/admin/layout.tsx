@@ -13,14 +13,18 @@ import {
   Settings,
   ArrowLeft,
   Upload,
+  Ticket,
+  Users,
 } from "lucide-react";
 
 const navItems = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
+  { label: "Commandes", href: "/admin/commandes", icon: ShoppingCart },
   { label: "Produits", href: "/admin/produits", icon: Glasses },
   { label: "Marques", href: "/admin/marques", icon: Tags },
   { label: "Options verres", href: "/admin/verres", icon: Disc3 },
-  { label: "Commandes", href: "/admin/commandes", icon: ShoppingCart },
+  { label: "Codes promo", href: "/admin/promotions", icon: Ticket },
+  { label: "Clients", href: "/admin/clients", icon: Users },
   { label: "Rendez-vous", href: "/admin/rendez-vous", icon: CalendarDays },
   { label: "Blog", href: "/admin/blog", icon: FileText },
   { label: "Contenu du site", href: "/admin/contenu", icon: Settings },

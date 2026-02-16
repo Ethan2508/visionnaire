@@ -9,8 +9,10 @@ interface OrderInsert {
   delivery_method: DeliveryMethod;
   payment_method: PaymentMethod;
   subtotal: number;
+  discount_amount: number;
   shipping_cost: number;
   total: number;
+  promo_code: string | null;
   shipping_first_name: string | null;
   shipping_last_name: string | null;
   shipping_street: string | null;
@@ -31,11 +33,12 @@ interface OrderItemInsert {
   lens_options_summary: string | null;
   lens_options_price: number;
   prescription_url: string | null;
+  prescription_data: Record<string, unknown> | null;
 }
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { items, deliveryMethod, shippingAddress, paymentMethod } = body;
+  const { items, deliveryMethod, shippingAddress, paymentMethod, promoCode } = body;
 
   // Créer le client Supabase (sans generic Database pour éviter l'incompatibilité PostgREST v12)
   const cookiesToSet: { name: string; value: string; options: CookieOptions }[] = [];
@@ -99,11 +102,38 @@ export async function POST(request: Request) {
       lens_options_summary: item.lensOptions?.map((o: { name: string }) => o.name).join(", ") || null,
       lens_options_price: lensPrice || 0,
       prescription_url: item.prescriptionUrl || null,
+      prescription_data: item.prescriptionData || null,
     });
   }
 
+  // Promo code discount
+  let discountAmount = 0;
+  if (promoCode) {
+    const { data: promo } = await supabase
+      .from("promotions")
+      .select("*")
+      .eq("code", promoCode.toUpperCase())
+      .eq("is_active", true)
+      .single();
+
+    if (promo) {
+      const now = new Date();
+      const validStart = !promo.start_date || new Date(promo.start_date) <= now;
+      const validEnd = !promo.end_date || new Date(promo.end_date) >= now;
+      const validMin = !promo.min_order_amount || subtotal >= promo.min_order_amount;
+
+      if (validStart && validEnd && validMin) {
+        if (promo.discount_type === "percentage") {
+          discountAmount = subtotal * (promo.discount_value / 100);
+        } else {
+          discountAmount = Math.min(promo.discount_value, subtotal);
+        }
+      }
+    }
+  }
+
   const shippingCost = deliveryMethod === "domicile" && subtotal < 150 ? 6.90 : 0;
-  const total = subtotal + shippingCost;
+  const total = subtotal - discountAmount + shippingCost;
 
   // Générer le numéro de commande
   const year = new Date().getFullYear();
@@ -120,8 +150,10 @@ export async function POST(request: Request) {
     delivery_method: deliveryMethod || "domicile",
     payment_method: paymentMethod || "stripe",
     subtotal,
+    discount_amount: discountAmount,
     shipping_cost: shippingCost,
     total,
+    promo_code: promoCode || null,
     shipping_first_name: shippingAddress?.firstName || null,
     shipping_last_name: shippingAddress?.lastName || null,
     shipping_street: shippingAddress?.street || null,
