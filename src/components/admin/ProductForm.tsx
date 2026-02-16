@@ -665,16 +665,21 @@ export default function ProductForm({ productId }: { productId?: string }) {
               </div>
               <div>
                 <label className="block text-xs font-medium text-stone-600 mb-1">
-                  Prix (si different)
+                  Prix réduit
                 </label>
                 <input
                   type="number"
                   step="0.01"
                   value={variant.price_override}
                   onChange={(e) => updateVariant(index, "price_override", e.target.value)}
-                  placeholder="—"
+                  placeholder={product.base_price ? `${product.base_price} €` : "—"}
                   className="w-full px-3 py-1.5 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900"
                 />
+                {variant.price_override && product.base_price && parseFloat(variant.price_override) < parseFloat(product.base_price) && (
+                  <p className="text-[10px] text-red-600 mt-0.5">
+                    -{Math.round((1 - parseFloat(variant.price_override) / parseFloat(product.base_price)) * 100)}% — <span className="line-through">{product.base_price} €</span>
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-stone-600 mb-1">
