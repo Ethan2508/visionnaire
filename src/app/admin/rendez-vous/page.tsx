@@ -225,7 +225,7 @@ export default function RendezVousAdminPage() {
                     {req.message && (
                       <p className="text-sm text-stone-600 bg-stone-50 p-2 rounded-lg mt-2">{req.message}</p>
                     )}
-                    <p className="text-xs text-stone-400 mt-2">Reçu le {new Date(req.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                    <p className="text-xs text-stone-400 mt-2">Reçu le {new Date(req.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })}</p>
                   </div>
                   <div className="flex gap-2 shrink-0">
                     {req.status === "pending" && (
