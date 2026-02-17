@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, LogIn } from "lucide-react";
+import Turnstile from "@/components/ui/Turnstile";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -11,19 +12,30 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
+    if (!turnstileToken) {
+      setError("Veuillez compléter la vérification de sécurité.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, redirect: redirectTo }),
+        body: JSON.stringify({ email, password, redirect: redirectTo, turnstileToken }),
       });
 
       const data = await response.json();
@@ -113,9 +125,11 @@ function LoginForm() {
         </div>
       </div>
 
+      <Turnstile onVerify={handleTurnstileVerify} />
+
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || !turnstileToken}
         className="w-full bg-stone-900 text-white py-2.5 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {loading ? (

@@ -1,28 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, Check, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import Turnstile from "@/components/ui/Turnstile";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
+    if (!turnstileToken) {
+      setError("Veuillez compléter la vérification de sécurité.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const supabase = createClient();
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, turnstileToken }),
       });
 
-      if (resetError) {
+      if (!response.ok) {
         setError("Une erreur est survenue. Veuillez réessayer.");
         setLoading(false);
         return;
@@ -99,9 +111,11 @@ export default function ForgotPasswordPage() {
               </div>
             </div>
 
+            <Turnstile onVerify={handleTurnstileVerify} />
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !turnstileToken}
               className="w-full bg-stone-900 text-white py-2.5 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (

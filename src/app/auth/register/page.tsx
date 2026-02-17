@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
+import Turnstile from "@/components/ui/Turnstile";
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
@@ -16,7 +15,11 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -35,32 +38,38 @@ export default function RegisterPage() {
       return;
     }
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-        },
-      },
-    });
-
-    if (error) {
-      setError("Erreur lors de la creation du compte. Veuillez reessayer.");
+    if (!turnstileToken) {
+      setError("Veuillez compléter la vérification de sécurité.");
       setLoading(false);
       return;
     }
 
-    // Envoyer l'email de bienvenue (non-bloquant)
-    fetch("/api/auth/welcome", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, firstName }),
-    }).catch(() => {});
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, firstName, lastName, turnstileToken }),
+      });
 
-    setSuccess(true);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Erreur lors de la création du compte.");
+        setLoading(false);
+        return;
+      }
+
+      // Envoyer l'email de bienvenue (non-bloquant)
+      fetch("/api/auth/welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, firstName }),
+      }).catch(() => {});
+
+      setSuccess(true);
+    } catch {
+      setError("Erreur lors de la création du compte. Veuillez réessayer.");
+    }
     setLoading(false);
   }
 
@@ -197,9 +206,11 @@ export default function RegisterPage() {
             </label>
           </div>
 
+          <Turnstile onVerify={handleTurnstileVerify} />
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !turnstileToken}
             className="w-full bg-stone-900 text-white py-2.5 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (

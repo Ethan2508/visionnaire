@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { Database } from "@/types/database";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export async function POST(request: Request) {
   let body;
@@ -9,7 +10,14 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "Corps de requête invalide" }, { status: 400 });
   }
-  const { email, password, redirect } = body;
+  const { email, password, redirect, turnstileToken } = body;
+
+  // Vérifier Turnstile
+  const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined;
+  const isHuman = await verifyTurnstile(turnstileToken, ip);
+  if (!isHuman) {
+    return NextResponse.json({ error: "Vérification de sécurité échouée" }, { status: 403 });
+  }
 
   // S11: Input validation
   if (!email || typeof email !== "string" || !email.includes("@")) {

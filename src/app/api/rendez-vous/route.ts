@@ -21,6 +21,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Champs requis manquants" }, { status: 400 });
     }
 
+    // Validation des longueurs (protection DoS)
+    if (typeof firstName !== "string" || firstName.length > 100) {
+      return NextResponse.json({ error: "Prénom invalide" }, { status: 400 });
+    }
+    if (typeof lastName !== "string" || lastName.length > 100) {
+      return NextResponse.json({ error: "Nom invalide" }, { status: 400 });
+    }
+    if (typeof email !== "string" || email.length > 255) {
+      return NextResponse.json({ error: "Email invalide" }, { status: 400 });
+    }
+    if (typeof phone !== "string" || phone.length > 30) {
+      return NextResponse.json({ error: "Téléphone invalide" }, { status: 400 });
+    }
+    if (typeof reason !== "string" || reason.length > 100) {
+      return NextResponse.json({ error: "Motif invalide" }, { status: 400 });
+    }
+    if (message && (typeof message !== "string" || message.length > 2000)) {
+      return NextResponse.json({ error: "Message trop long (max 2000 caractères)" }, { status: 400 });
+    }
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Email invalide" }, { status: 400 });
     }
