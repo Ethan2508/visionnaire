@@ -35,7 +35,7 @@ export interface TurnstileRef {
   reset: () => void;
 }
 
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAACeyFn9iB8yvnLZJ";
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 
 const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(function Turnstile(
   {

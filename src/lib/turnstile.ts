@@ -1,4 +1,4 @@
-const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY || "0x4AAAAAACeyFvKG59pEM2L1DfwTzh_HcZc";
+const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
 interface TurnstileVerifyResponse {
@@ -11,6 +11,11 @@ interface TurnstileVerifyResponse {
 export async function verifyTurnstile(token: string, ip?: string): Promise<boolean> {
   if (!token) {
     console.warn("[TURNSTILE] No token provided");
+    return false;
+  }
+
+  if (!TURNSTILE_SECRET_KEY) {
+    console.error("[TURNSTILE] TURNSTILE_SECRET_KEY not configured");
     return false;
   }
 
