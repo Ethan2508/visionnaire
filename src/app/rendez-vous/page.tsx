@@ -2,16 +2,22 @@
 
 import { CalendarDays, Phone, Clock, MapPin, Send } from "lucide-react";
 import Link from "next/link";
-import { useState, useCallback, type FormEvent } from "react";
-import Turnstile from "@/components/ui/Turnstile";
+import { useState, useCallback, useRef, type FormEvent } from "react";
+import Turnstile, { type TurnstileRef } from "@/components/ui/Turnstile";
 
 export default function RendezVousPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileRef>(null);
 
   const handleTurnstileVerify = useCallback((token: string) => {
     setTurnstileToken(token);
+  }, []);
+
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken(null);
+    turnstileRef.current?.reset();
   }, []);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -45,6 +51,7 @@ export default function RendezVousPage() {
       setSubmitted(true);
     } catch {
       alert("Une erreur est survenue. Veuillez réessayer ou nous appeler directement.");
+      resetTurnstile();
     } finally {
       setLoading(false);
     }
@@ -193,7 +200,7 @@ export default function RendezVousPage() {
               </div>
 
               <div className="flex justify-center">
-                <Turnstile onVerify={handleTurnstileVerify} />
+                <Turnstile ref={turnstileRef} onVerify={handleTurnstileVerify} />
               </div>
 
               <button

@@ -1,10 +1,10 @@
 "use client";
 
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import Turnstile from "@/components/ui/Turnstile";
+import Turnstile, { type TurnstileRef } from "@/components/ui/Turnstile";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -13,11 +13,17 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileRef>(null);
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
 
   const handleTurnstileVerify = useCallback((token: string) => {
     setTurnstileToken(token);
+  }, []);
+
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken(null);
+    turnstileRef.current?.reset();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -42,6 +48,7 @@ function LoginForm() {
 
       if (!response.ok) {
         setError("Email ou mot de passe incorrect.");
+        resetTurnstile();
         setLoading(false);
         return;
       }
@@ -52,6 +59,7 @@ function LoginForm() {
       window.location.href = safeRedirect;
     } catch (err) {
       setError("Une erreur est survenue. Veuillez réessayer.");
+      resetTurnstile();
       setLoading(false);
     }
   }
@@ -125,7 +133,7 @@ function LoginForm() {
         </div>
       </div>
 
-      <Turnstile onVerify={handleTurnstileVerify} />
+      <Turnstile ref={turnstileRef} onVerify={handleTurnstileVerify} />
 
       <button
         type="submit"

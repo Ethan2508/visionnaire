@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, Check, Loader2 } from "lucide-react";
-import Turnstile from "@/components/ui/Turnstile";
+import Turnstile, { type TurnstileRef } from "@/components/ui/Turnstile";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -11,9 +11,15 @@ export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileRef>(null);
 
   const handleTurnstileVerify = useCallback((token: string) => {
     setTurnstileToken(token);
+  }, []);
+
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken(null);
+    turnstileRef.current?.reset();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -36,6 +42,7 @@ export default function ForgotPasswordPage() {
 
       if (!response.ok) {
         setError("Une erreur est survenue. Veuillez réessayer.");
+        resetTurnstile();
         setLoading(false);
         return;
       }
@@ -43,6 +50,7 @@ export default function ForgotPasswordPage() {
       setSent(true);
     } catch {
       setError("Une erreur est survenue. Veuillez réessayer.");
+      resetTurnstile();
     }
     setLoading(false);
   }
@@ -111,7 +119,7 @@ export default function ForgotPasswordPage() {
               </div>
             </div>
 
-            <Turnstile onVerify={handleTurnstileVerify} />
+            <Turnstile ref={turnstileRef} onVerify={handleTurnstileVerify} />
 
             <button
               type="submit"

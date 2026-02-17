@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
-import Turnstile from "@/components/ui/Turnstile";
+import Turnstile, { type TurnstileRef } from "@/components/ui/Turnstile";
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
@@ -16,9 +16,15 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileRef>(null);
 
   const handleTurnstileVerify = useCallback((token: string) => {
     setTurnstileToken(token);
+  }, []);
+
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken(null);
+    turnstileRef.current?.reset();
   }, []);
 
   async function handleRegister(e: React.FormEvent) {
@@ -55,6 +61,7 @@ export default function RegisterPage() {
 
       if (!response.ok) {
         setError(data.error || "Erreur lors de la création du compte.");
+        resetTurnstile();
         setLoading(false);
         return;
       }
@@ -69,6 +76,7 @@ export default function RegisterPage() {
       setSuccess(true);
     } catch {
       setError("Erreur lors de la création du compte. Veuillez réessayer.");
+      resetTurnstile();
     }
     setLoading(false);
   }
@@ -206,7 +214,7 @@ export default function RegisterPage() {
             </label>
           </div>
 
-          <Turnstile onVerify={handleTurnstileVerify} />
+          <Turnstile ref={turnstileRef} onVerify={handleTurnstileVerify} />
 
           <button
             type="submit"

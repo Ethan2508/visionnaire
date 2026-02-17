@@ -1,15 +1,21 @@
 "use client";
 
-import { useState, FormEvent, useCallback } from "react";
-import Turnstile from "@/components/ui/Turnstile";
+import { useState, FormEvent, useCallback, useRef } from "react";
+import Turnstile, { type TurnstileRef } from "@/components/ui/Turnstile";
 
 export default function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileRef>(null);
 
   const handleTurnstileVerify = useCallback((token: string) => {
     setTurnstileToken(token);
+  }, []);
+
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken(null);
+    turnstileRef.current?.reset();
   }, []);
 
   async function handleSubmit(e: FormEvent) {
@@ -32,9 +38,11 @@ export default function NewsletterForm() {
         setEmail("");
       } else {
         setStatus("error");
+        resetTurnstile();
       }
     } catch {
       setStatus("error");
+      resetTurnstile();
     }
   }
 
@@ -67,7 +75,7 @@ export default function NewsletterForm() {
         </button>
       </form>
       <div className="mt-4 flex justify-center">
-        <Turnstile onVerify={handleTurnstileVerify} theme="dark" size="compact" />
+        <Turnstile ref={turnstileRef} onVerify={handleTurnstileVerify} theme="dark" size="compact" />
       </div>
       {status === "error" && (
         <p className="text-red-400 text-xs mt-2 text-center">

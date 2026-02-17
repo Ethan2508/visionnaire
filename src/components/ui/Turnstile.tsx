@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from "react";
 
 declare global {
   interface Window {
@@ -31,16 +31,23 @@ interface TurnstileProps {
   className?: string;
 }
 
+export interface TurnstileRef {
+  reset: () => void;
+}
+
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAACeyFn9iB8yvnLZJ";
 
-export default function Turnstile({
-  onVerify,
-  onExpire,
-  onError,
-  theme = "light",
-  size = "normal",
-  className = "",
-}: TurnstileProps) {
+const Turnstile = forwardRef<TurnstileRef, TurnstileProps>(function Turnstile(
+  {
+    onVerify,
+    onExpire,
+    onError,
+    theme = "light",
+    size = "normal",
+    className = "",
+  },
+  ref
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const scriptLoadedRef = useRef(false);
@@ -57,6 +64,15 @@ export default function Turnstile({
       size,
     });
   }, [onVerify, onExpire, onError, theme, size]);
+
+  // Expose reset function to parent
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.reset(widgetIdRef.current);
+      }
+    },
+  }), []);
 
   useEffect(() => {
     // Check if script already exists
@@ -99,4 +115,6 @@ export default function Turnstile({
   }, [renderWidget]);
 
   return <div ref={containerRef} className={className} />;
-}
+});
+
+export default Turnstile;
