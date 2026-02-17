@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getResend, EMAIL_FROM } from "@/lib/resend";
 import { rdvConfirmationEmail, rdvNotificationEmail } from "@/lib/emails";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +15,24 @@ export async function POST(request: Request) {
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Email invalide" }, { status: 400 });
+    }
+
+    // Sauvegarder en base de données
+    const supabase = await createClient();
+    const { error: dbError } = await supabase.from("appointment_requests").insert({
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone,
+      reason,
+      preferred_date: preferredDate || null,
+      message: message || null,
+      status: "pending",
+    } as never);
+
+    if (dbError) {
+      console.error("[RDV] Database error:", dbError);
+      // Continue anyway to send emails
     }
 
     const rdvData = { firstName, lastName, email, phone, reason, preferredDate, message };
@@ -31,7 +50,7 @@ export async function POST(request: Request) {
       }),
       getResend().emails.send({
         from: EMAIL_FROM,
-        to: "contact@visionnairesopticiens.fr",
+        to: ["contact@visionnairesopticiens.fr", "visionnaires@orange.fr"],
         subject: shopEmail.subject,
         html: shopEmail.html,
       }),

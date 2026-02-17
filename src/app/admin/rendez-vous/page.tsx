@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Calendar, Clock, User, Plus, ChevronLeft, ChevronRight, Loader2, Trash2, Check, X } from "lucide-react";
+import { Calendar, Clock, User, Plus, ChevronLeft, ChevronRight, Loader2, Trash2, Check, X, Mail, Phone, MessageSquare } from "lucide-react";
 
 const TYPE_LABELS: Record<string, string> = {
   examen_vue: "Examen de vue",
@@ -17,6 +17,20 @@ const STATUS_COLORS: Record<string, string> = {
   terminee: "bg-stone-100 text-stone-600",
 };
 
+const REQUEST_STATUS_COLORS: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800",
+  contacted: "bg-blue-100 text-blue-800",
+  confirmed: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
+};
+
+const REQUEST_STATUS_LABELS: Record<string, string> = {
+  pending: "En attente",
+  contacted: "Contacté",
+  confirmed: "Confirmé",
+  cancelled: "Annulé",
+};
+
 interface Appointment {
   id: string;
   type: string;
@@ -25,6 +39,19 @@ interface Appointment {
   created_at: string;
   slot: { id: string; date: string; start_time: string; end_time: string };
   profile: { id: string; first_name: string; last_name: string; email: string; phone: string | null };
+}
+
+interface AppointmentRequest {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  reason: string;
+  preferred_date: string | null;
+  message: string | null;
+  status: string;
+  created_at: string;
 }
 
 interface Slot {
@@ -36,8 +63,9 @@ interface Slot {
 }
 
 export default function RendezVousAdminPage() {
-  const [tab, setTab] = useState<"rdv" | "creneaux">("rdv");
+  const [tab, setTab] = useState<"demandes" | "rdv" | "creneaux">("demandes");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [requests, setRequests] = useState<AppointmentRequest[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0);
@@ -53,13 +81,21 @@ export default function RendezVousAdminPage() {
   async function load() {
     setLoading(true);
     const supabase = createClient();
-    const [{ data: rdvs }, { data: slotData }] = await Promise.all([
+    const [{ data: rdvs }, { data: slotData }, { data: requestData }] = await Promise.all([
       supabase.from("appointments").select("*, slot:appointment_slots(*), profile:profiles(id, first_name, last_name, email, phone)").order("created_at", { ascending: false }),
       supabase.from("appointment_slots").select("*").order("date", { ascending: true }).order("start_time", { ascending: true }),
+      supabase.from("appointment_requests").select("*").order("created_at", { ascending: false }),
     ]);
     setAppointments((rdvs as unknown as Appointment[]) || []);
     setSlots((slotData as Slot[]) || []);
+    setRequests((requestData as AppointmentRequest[]) || []);
     setLoading(false);
+  }
+
+  async function updateRequestStatus(id: string, status: string) {
+    const supabase = createClient();
+    await supabase.from("appointment_requests").update({ status }).eq("id", id);
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
   }
 
   async function updateStatus(id: string, status: string) {
@@ -151,10 +187,67 @@ export default function RendezVousAdminPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-stone-900">Rendez-vous</h1>
         <div className="flex bg-stone-100 rounded-lg p-0.5">
+          <button onClick={() => setTab("demandes")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === "demandes" ? "bg-white shadow-sm text-stone-900" : "text-stone-500 hover:text-stone-700"}`}>
+            Demandes {requests.filter(r => r.status === "pending").length > 0 && <span className="ml-1.5 px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-xs rounded-full">{requests.filter(r => r.status === "pending").length}</span>}
+          </button>
           <button onClick={() => setTab("rdv")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === "rdv" ? "bg-white shadow-sm text-stone-900" : "text-stone-500 hover:text-stone-700"}`}>Rendez-vous</button>
           <button onClick={() => setTab("creneaux")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === "creneaux" ? "bg-white shadow-sm text-stone-900" : "text-stone-500 hover:text-stone-700"}`}>Créneaux</button>
         </div>
       </div>
+
+      {tab === "demandes" && (
+        <div className="space-y-3">
+          {requests.length === 0 ? (
+            <div className="text-center py-16 text-stone-400">
+              <MessageSquare size={40} className="mx-auto mb-3 opacity-50" />
+              <p>Aucune demande de rendez-vous</p>
+            </div>
+          ) : (
+            requests.map((req) => (
+              <div key={req.id} className="bg-white rounded-xl border border-stone-200 p-4">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <User size={14} className="text-stone-400" />
+                      <span className="text-sm font-semibold text-stone-900">{req.first_name} {req.last_name}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${REQUEST_STATUS_COLORS[req.status] || REQUEST_STATUS_COLORS.pending}`}>
+                        {REQUEST_STATUS_LABELS[req.status] || "En attente"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-stone-500 mb-2">
+                      <span className="flex items-center gap-1"><Mail size={12} /> {req.email}</span>
+                      <span className="flex items-center gap-1"><Phone size={12} /> {req.phone}</span>
+                      {req.preferred_date && <span className="flex items-center gap-1"><Calendar size={12} /> {req.preferred_date}</span>}
+                    </div>
+                    <div className="text-sm text-stone-700 mb-1">
+                      <span className="font-medium">Motif :</span> {TYPE_LABELS[req.reason] || req.reason}
+                    </div>
+                    {req.message && (
+                      <p className="text-sm text-stone-600 bg-stone-50 p-2 rounded-lg mt-2">{req.message}</p>
+                    )}
+                    <p className="text-xs text-stone-400 mt-2">Reçu le {new Date(req.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    {req.status === "pending" && (
+                      <>
+                        <button onClick={() => updateRequestStatus(req.id, "contacted")} className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors">Contacté</button>
+                        <button onClick={() => updateRequestStatus(req.id, "confirmed")} className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition-colors">Confirmé</button>
+                        <button onClick={() => updateRequestStatus(req.id, "cancelled")} className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors">Annulé</button>
+                      </>
+                    )}
+                    {req.status === "contacted" && (
+                      <>
+                        <button onClick={() => updateRequestStatus(req.id, "confirmed")} className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition-colors">Confirmé</button>
+                        <button onClick={() => updateRequestStatus(req.id, "cancelled")} className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors">Annulé</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {tab === "rdv" && (
         <div className="space-y-3">
