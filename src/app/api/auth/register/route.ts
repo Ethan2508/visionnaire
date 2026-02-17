@@ -58,16 +58,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Erreur lors de la création du compte" }, { status: 500 });
   }
 
-  // Envoyer email de confirmation via Supabase
-  if (data.user) {
-    await supabase.auth.admin.generateLink({
-      type: "signup",
-      email,
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr"}/auth/login`,
-      },
-    });
-  }
+  // Supabase envoie automatiquement un email de confirmation quand email_confirm: false
 
   return NextResponse.json({ success: true });
 }
