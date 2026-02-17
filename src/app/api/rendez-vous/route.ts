@@ -2,11 +2,19 @@ import { NextResponse } from "next/server";
 import { getResend, EMAIL_FROM } from "@/lib/resend";
 import { rdvConfirmationEmail, rdvNotificationEmail } from "@/lib/emails";
 import { createClient } from "@/lib/supabase/server";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { firstName, lastName, email, phone, reason, preferredDate, message } = body;
+    const { firstName, lastName, email, phone, reason, preferredDate, message, turnstileToken } = body;
+
+    // Vérifier Turnstile
+    const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined;
+    const isHuman = await verifyTurnstile(turnstileToken, ip);
+    if (!isHuman) {
+      return NextResponse.json({ error: "Vérification de sécurité échouée" }, { status: 403 });
+    }
 
     // Validation basique
     if (!firstName || !lastName || !email || !phone || !reason) {

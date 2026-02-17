@@ -2,15 +2,27 @@
 
 import { CalendarDays, Phone, Clock, MapPin, Send } from "lucide-react";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useState, useCallback, type FormEvent } from "react";
+import Turnstile from "@/components/ui/Turnstile";
 
 export default function RendezVousPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+
+    if (!turnstileToken) {
+      alert("Veuillez compléter la vérification de sécurité.");
+      setLoading(false);
+      return;
+    }
 
     const formData = new FormData(e.currentTarget);
     try {
@@ -25,6 +37,7 @@ export default function RendezVousPage() {
           reason: formData.get("reason"),
           preferredDate: formData.get("preferredDate") || null,
           message: formData.get("message") || null,
+          turnstileToken,
         }),
       });
 
@@ -179,9 +192,13 @@ export default function RendezVousPage() {
                 />
               </div>
 
+              <div className="flex justify-center">
+                <Turnstile onVerify={handleTurnstileVerify} />
+              </div>
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !turnstileToken}
                 className="w-full bg-black text-white py-3.5 text-sm font-medium uppercase tracking-[0.1em] hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Envoi en cours..." : "Envoyer ma demande"}

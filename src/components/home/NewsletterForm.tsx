@@ -1,21 +1,31 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useCallback } from "react";
+import Turnstile from "@/components/ui/Turnstile";
 
 export default function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    if (!turnstileToken) {
+      setStatus("error");
+      return;
+    }
 
     setStatus("loading");
     try {
       const res = await fetch("/api/newsletter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken }),
       });
       if (res.ok) {
         setStatus("success");
@@ -37,28 +47,33 @@ export default function NewsletterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-      <input
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Votre adresse e-mail"
-        aria-label="Adresse e-mail pour la newsletter"
-        className="flex-1 bg-white/10 border border-white/10 px-5 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition-colors input-glow"
-      />
-      <button
-        type="submit"
-        disabled={status === "loading"}
-        className="bg-white text-black px-7 py-3.5 text-sm font-medium uppercase tracking-[0.1em] hover:bg-white/90 transition-colors shrink-0 disabled:opacity-50"
-      >
-        {status === "loading" ? "..." : "S'inscrire"}
-      </button>
+    <div className="mt-8 max-w-md mx-auto">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Votre adresse e-mail"
+          aria-label="Adresse e-mail pour la newsletter"
+          className="flex-1 bg-white/10 border border-white/10 px-5 py-3.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition-colors input-glow"
+        />
+        <button
+          type="submit"
+          disabled={status === "loading" || !turnstileToken}
+          className="bg-white text-black px-7 py-3.5 text-sm font-medium uppercase tracking-[0.1em] hover:bg-white/90 transition-colors shrink-0 disabled:opacity-50"
+        >
+          {status === "loading" ? "..." : "S'inscrire"}
+        </button>
+      </form>
+      <div className="mt-4 flex justify-center">
+        <Turnstile onVerify={handleTurnstileVerify} theme="dark" size="compact" />
+      </div>
       {status === "error" && (
-        <p className="text-red-400 text-xs mt-1 sm:mt-0 sm:absolute">
+        <p className="text-red-400 text-xs mt-2 text-center">
           Une erreur est survenue. Réessayez.
         </p>
       )}
-    </form>
+    </div>
   );
 }

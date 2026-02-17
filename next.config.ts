@@ -1,14 +1,14 @@
 import type { NextConfig } from "next";
 
-// Content-Security-Policy — strict but compatible with Next.js, GA, Supabase, Alma, Vercel
+// Content-Security-Policy — strict but compatible with Next.js, GA, Supabase, Alma, Vercel, Turnstile
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com https://vercel.live;
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com https://vercel.live https://challenges.cloudflare.com;
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: blob: https://odirisqsqpdvitisvdzn.supabase.co https://www.google-analytics.com https://www.googletagmanager.com;
   font-src 'self' data:;
-  connect-src 'self' https://odirisqsqpdvitisvdzn.supabase.co wss://odirisqsqpdvitisvdzn.supabase.co https://www.google-analytics.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://api.sandbox.almapay.com https://api.almapay.com https://api-adresse.data.gouv.fr https://vercel.live;
-  frame-src 'self' https://checkout.almapay.com https://vercel.live;
+  connect-src 'self' https://odirisqsqpdvitisvdzn.supabase.co wss://odirisqsqpdvitisvdzn.supabase.co https://www.google-analytics.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://api.sandbox.almapay.com https://api.almapay.com https://api-adresse.data.gouv.fr https://vercel.live https://challenges.cloudflare.com;
+  frame-src 'self' https://checkout.almapay.com https://vercel.live https://challenges.cloudflare.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
