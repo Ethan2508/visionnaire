@@ -94,7 +94,7 @@ export default function RendezVousAdminPage() {
 
   async function updateRequestStatus(id: string, status: string) {
     const supabase = createClient();
-    await supabase.from("appointment_requests").update({ status }).eq("id", id);
+    await supabase.from("appointment_requests").update({ status } as never).eq("id", id);
     setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
   }
 
