@@ -251,36 +251,77 @@ export default function RendezVousAdminPage() {
 
       {tab === "rdv" && (
         <div className="space-y-3">
-          {upcomingAppointments.length === 0 ? (
+          {/* RDV confirmés depuis les demandes */}
+          {requests.filter(r => r.status === "confirmed").length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-sm font-semibold text-stone-700 mb-3">Rendez-vous confirmés (demandes)</h2>
+              <div className="space-y-3">
+                {requests.filter(r => r.status === "confirmed").map((req) => (
+                  <div key={req.id} className="bg-white rounded-xl border border-green-200 p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <User size={14} className="text-stone-400" />
+                          <span className="text-sm font-semibold text-stone-900">{req.first_name} {req.last_name}</span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Confirmé</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-stone-500">
+                          <span className="flex items-center gap-1"><Mail size={12} /> {req.email}</span>
+                          <span className="flex items-center gap-1"><Phone size={12} /> {req.phone}</span>
+                          {req.preferred_date && <span className="flex items-center gap-1"><Calendar size={12} /> {req.preferred_date}</span>}
+                          <span className="bg-stone-100 px-2 py-0.5 rounded text-xs">{TYPE_LABELS[req.reason] || req.reason}</span>
+                        </div>
+                        {req.message && <p className="text-xs text-stone-500 mt-1 italic">{req.message}</p>}
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button onClick={() => updateRequestStatus(req.id, "completed")} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium hover:bg-emerald-100 transition-colors">Terminé</button>
+                        <button onClick={() => updateRequestStatus(req.id, "cancelled")} className="px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors">Annuler</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* RDV depuis le système de créneaux */}
+          {upcomingAppointments.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-stone-700 mb-3">Rendez-vous (créneaux)</h2>
+              <div className="space-y-3">
+                {upcomingAppointments.map((appt) => (
+                  <div key={appt.id} className="bg-white rounded-xl border border-stone-200 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <User size={14} className="text-stone-400" />
+                        <span className="text-sm font-semibold text-stone-900">{appt.profile.first_name} {appt.profile.last_name}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[appt.status]}`}>{appt.status === "confirmee" ? "Confirmé" : appt.status === "annulee" ? "Annulé" : "Terminé"}</span>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-stone-500">
+                        <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(appt.slot.date).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span>
+                        <span className="flex items-center gap-1"><Clock size={12} /> {appt.slot.start_time.slice(0, 5)} - {appt.slot.end_time.slice(0, 5)}</span>
+                        <span className="bg-stone-100 px-2 py-0.5 rounded text-xs">{TYPE_LABELS[appt.type] || appt.type}</span>
+                      </div>
+                      {appt.notes && <p className="text-xs text-stone-500 mt-1 italic">{appt.notes}</p>}
+                      <p className="text-xs text-stone-400 mt-1">{appt.profile.email}{appt.profile.phone ? ` · ${appt.profile.phone}` : ""}</p>
+                    </div>
+                    {appt.status === "confirmee" && (
+                      <div className="flex gap-2 shrink-0">
+                        <button onClick={() => updateStatus(appt.id, "terminee")} className="p-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors" title="Marquer terminé"><Check size={16} /></button>
+                        <button onClick={() => updateStatus(appt.id, "annulee")} className="p-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors" title="Annuler"><X size={16} /></button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {requests.filter(r => r.status === "confirmed").length === 0 && upcomingAppointments.length === 0 && (
             <div className="text-center py-16 text-stone-400">
               <Calendar size={40} className="mx-auto mb-3 opacity-50" />
               <p>Aucun rendez-vous</p>
             </div>
-          ) : (
-            upcomingAppointments.map((appt) => (
-              <div key={appt.id} className="bg-white rounded-xl border border-stone-200 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <User size={14} className="text-stone-400" />
-                    <span className="text-sm font-semibold text-stone-900">{appt.profile.first_name} {appt.profile.last_name}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[appt.status]}`}>{appt.status === "confirmee" ? "Confirmé" : appt.status === "annulee" ? "Annulé" : "Terminé"}</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-stone-500">
-                    <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(appt.slot.date).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}</span>
-                    <span className="flex items-center gap-1"><Clock size={12} /> {appt.slot.start_time.slice(0, 5)} - {appt.slot.end_time.slice(0, 5)}</span>
-                    <span className="bg-stone-100 px-2 py-0.5 rounded text-xs">{TYPE_LABELS[appt.type] || appt.type}</span>
-                  </div>
-                  {appt.notes && <p className="text-xs text-stone-500 mt-1 italic">{appt.notes}</p>}
-                  <p className="text-xs text-stone-400 mt-1">{appt.profile.email}{appt.profile.phone ? ` · ${appt.profile.phone}` : ""}</p>
-                </div>
-                {appt.status === "confirmee" && (
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => updateStatus(appt.id, "terminee")} className="p-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors" title="Marquer terminé"><Check size={16} /></button>
-                    <button onClick={() => updateStatus(appt.id, "annulee")} className="p-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors" title="Annuler"><X size={16} /></button>
-                  </div>
-                )}
-              </div>
-            ))
           )}
         </div>
       )}

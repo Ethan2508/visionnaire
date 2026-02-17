@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+// GET handler pour permettre à Alma de vérifier l'URL du webhook
+export async function GET() {
+  return NextResponse.json({ status: "ok", message: "Alma webhook endpoint" });
+}
+
 const ALMA_API_KEY = process.env.ALMA_API_KEY!;
 const ALMA_API_URL = process.env.ALMA_SANDBOX === "true"
   ? "https://api.sandbox.getalma.eu/v1"

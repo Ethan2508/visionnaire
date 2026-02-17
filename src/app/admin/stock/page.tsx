@@ -468,27 +468,26 @@ export default function AdminStockPage() {
                         <div className="flex items-center justify-center gap-1">
                           <button
                             type="button"
-                            onClick={() =>
-                              incrementStock(
-                                variant.id,
-                                variant.stock_quantity,
-                                -1
-                              )
-                            }
-                            className="p-1 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded transition-colors"
+                            onClick={() => {
+                              const current = modified[variant.id] ?? variant.stock_quantity;
+                              if (current > 0) {
+                                incrementStock(variant.id, variant.stock_quantity, -1);
+                              }
+                            }}
+                            disabled={(modified[variant.id] ?? variant.stock_quantity) === 0}
+                            className="p-1 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <Minus size={14} />
                           </button>
                           <input
                             type="number"
                             min="0"
+                            max="9999"
                             value={displayQty}
-                            onChange={(e) =>
-                              updateStock(
-                                variant.id,
-                                parseInt(e.target.value) || 0
-                              )
-                            }
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              updateStock(variant.id, isNaN(val) ? 0 : Math.max(0, val));
+                            }}
                             className={`w-16 text-center px-2 py-1 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-stone-900 ${
                               stockLevel === "out"
                                 ? "border-red-300 bg-red-50 text-red-700"
