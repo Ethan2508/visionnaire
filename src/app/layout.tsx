@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     "Lyon",
     "opticien Lyon",
   ],
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://visionnaireopticiens.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr"),
   openGraph: {
     type: "website",
     locale: "fr_FR",

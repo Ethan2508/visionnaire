@@ -3,8 +3,8 @@
  * Design minimaliste, luxe, cohérent avec la charte graphique (noir, pierre, blanc)
  */
 
-const LOGO_URL = "https://visionnaireopticiens.vercel.app/logos/logo-black.png";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://visionnaireopticiens.vercel.app";
+const LOGO_URL = "https://www.visionnairesopticiens.fr/logos/logo-black.png";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr";
 
 /* ─── Base layout ─── */
 function layout(content: string): string {

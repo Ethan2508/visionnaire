@@ -196,7 +196,7 @@ export default async function HomePage() {
     // Fail silently — client will fetch as fallback
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://visionnaireopticiens.vercel.app";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr";
 
   const organizationJsonLd = {
     "@context": "https://schema.org",

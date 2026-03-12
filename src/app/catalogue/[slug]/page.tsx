@@ -43,7 +43,7 @@ interface Product {
   product_images: ProductImage[];
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://visionnaireopticiens.vercel.app";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

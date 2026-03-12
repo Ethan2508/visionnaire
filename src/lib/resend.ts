@@ -11,4 +11,4 @@ export function getResend(): Resend {
 
 export const EMAIL_FROM = "Visionnaire Opticiens <contact@visionnairesopticiens.fr>";
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://visionnaireopticiens.vercel.app";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr";
