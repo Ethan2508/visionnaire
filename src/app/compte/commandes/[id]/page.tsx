@@ -13,6 +13,8 @@ import {
   ExternalLink,
   Loader2,
   FileText,
+  RotateCcw,
+  X,
 } from "lucide-react";
 
 interface OrderItem {
@@ -53,6 +55,12 @@ interface OrderDetail {
 
 const statusLabels = ORDER_STATUS_STYLES;
 
+interface ReturnItem {
+  order_item_id: string;
+  quantity: number;
+  product_name: string;
+}
+
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -60,6 +68,14 @@ export default function OrderDetailPage() {
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // États pour le retour
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [selectedItems, setSelectedItems] = useState<ReturnItem[]>([]);
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+  const [returnError, setReturnError] = useState<string | null>(null);
+  const [returnSuccess, setReturnSuccess] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -108,6 +124,75 @@ export default function OrderDetailPage() {
   const status = statusLabels[order.status] || {
     label: order.status,
     color: "bg-stone-100 text-stone-600",
+  };
+
+  // Vérifier l'éligibilité au retour
+  const orderDate = new Date(order.created_at);
+  const now = new Date();
+  const daysSinceOrder = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
+  const canRequestReturn = order.status === "livree" && daysSinceOrder <= 14;
+  const daysRemaining = 14 - daysSinceOrder;
+
+  // Ouvrir le modal de retour
+  const openReturnModal = () => {
+    setSelectedItems(order.order_items.map(item => ({
+      order_item_id: item.id,
+      quantity: item.quantity,
+      product_name: item.product_name,
+    })));
+    setReturnReason("");
+    setReturnError(null);
+    setReturnSuccess(false);
+    setShowReturnModal(true);
+  };
+
+  // Soumettre la demande de retour
+  const submitReturn = async () => {
+    if (!returnReason.trim()) {
+      setReturnError("Veuillez indiquer le motif du retour");
+      return;
+    }
+
+    const itemsToReturn = selectedItems.filter(item => item.quantity > 0);
+    if (itemsToReturn.length === 0) {
+      setReturnError("Veuillez sélectionner au moins un article");
+      return;
+    }
+
+    setSubmittingReturn(true);
+    setReturnError(null);
+
+    try {
+      const res = await fetch("/api/account/returns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order.id,
+          reason: returnReason,
+          items: itemsToReturn.map(item => ({
+            order_item_id: item.order_item_id,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setReturnError(data.error || "Une erreur est survenue");
+        setSubmittingReturn(false);
+        return;
+      }
+
+      setReturnSuccess(true);
+      setTimeout(() => {
+        setShowReturnModal(false);
+      }, 2000);
+    } catch {
+      setReturnError("Une erreur est survenue");
+    } finally {
+      setSubmittingReturn(false);
+    }
   };
 
   return (
@@ -321,8 +406,132 @@ export default function OrderDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Demande de retour */}
+          {canRequestReturn && (
+            <div className="bg-white rounded-xl border border-stone-200 p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
+                    <RotateCcw size={16} />
+                    Retourner un article
+                  </h2>
+                  <p className="text-xs text-stone-500 mt-1">
+                    {daysRemaining > 0 
+                      ? `Il vous reste ${daysRemaining} jour${daysRemaining > 1 ? "s" : ""} pour retourner vos articles`
+                      : "Dernier jour pour retourner vos articles"
+                    }
+                  </p>
+                </div>
+                <button
+                  onClick={openReturnModal}
+                  className="px-4 py-2 bg-stone-100 text-stone-900 text-sm font-medium rounded-lg hover:bg-stone-200 transition-colors"
+                >
+                  Demander un retour
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Modal de demande de retour */}
+      {showReturnModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200">
+              <h2 className="text-lg font-semibold text-stone-900">Demande de retour</h2>
+              <button
+                onClick={() => setShowReturnModal(false)}
+                className="p-1 text-stone-400 hover:text-stone-900 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {returnSuccess ? (
+              <div className="p-8 text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <RotateCcw size={24} className="text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-stone-900 mb-2">Demande envoyée !</h3>
+                <p className="text-sm text-stone-500">
+                  Nous avons bien reçu votre demande de retour. Vous recevrez un email de confirmation sous 48h.
+                </p>
+              </div>
+            ) : (
+              <div className="p-5 space-y-4">
+                {returnError && (
+                  <div className="bg-red-50 text-red-700 text-sm px-4 py-3 rounded-lg border border-red-200">
+                    {returnError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                    Articles à retourner
+                  </label>
+                  <div className="space-y-2">
+                    {selectedItems.map((item, index) => (
+                      <div key={item.order_item_id} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+                        <span className="text-sm text-stone-900">{item.product_name}</span>
+                        <select
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const newItems = [...selectedItems];
+                            newItems[index].quantity = parseInt(e.target.value);
+                            setSelectedItems(newItems);
+                          }}
+                          className="text-sm border border-stone-300 rounded px-2 py-1"
+                        >
+                          <option value={0}>Ne pas retourner</option>
+                          {Array.from({ length: order.order_items.find(i => i.id === item.order_item_id)?.quantity || 1 }, (_, i) => i + 1).map(n => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                    Motif du retour *
+                  </label>
+                  <textarea
+                    value={returnReason}
+                    onChange={(e) => setReturnReason(e.target.value)}
+                    placeholder="Expliquez la raison de votre retour..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="bg-stone-50 p-4 rounded-lg text-xs text-stone-500 space-y-1">
+                  <p>• Les articles doivent être retournés dans leur état d'origine</p>
+                  <p>• Le remboursement sera effectué sous 14 jours après réception</p>
+                  <p>• Les frais de retour sont à votre charge</p>
+                </div>
+
+                <button
+                  onClick={submitReturn}
+                  disabled={submittingReturn}
+                  className="w-full bg-stone-900 text-white py-2.5 rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {submittingReturn ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <>
+                      <RotateCcw size={18} />
+                      Envoyer la demande
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

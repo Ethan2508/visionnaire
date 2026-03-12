@@ -16,11 +16,13 @@ import {
   Ticket,
   Users,
   Package,
+  RotateCcw,
 } from "lucide-react";
 
 const navItems = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
   { label: "Commandes", href: "/admin/commandes", icon: ShoppingCart },
+  { label: "Retours", href: "/admin/retours", icon: RotateCcw },
   { label: "Produits", href: "/admin/produits", icon: Glasses },
   { label: "Stock", href: "/admin/stock", icon: Package },
   { label: "Marques", href: "/admin/marques", icon: Tags },
