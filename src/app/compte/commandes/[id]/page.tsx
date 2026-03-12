@@ -12,6 +12,7 @@ import {
   Clock,
   ExternalLink,
   Loader2,
+  FileText,
 } from "lucide-react";
 
 interface OrderItem {
@@ -196,6 +197,21 @@ export default function OrderDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Télécharger la facture */}
+          {order.status !== "en_attente_paiement" && order.status !== "annulee" && (
+            <div className="bg-white rounded-xl border border-stone-200 p-5">
+              <a
+                href={`/api/orders/${order.id}/invoice`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full bg-stone-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-stone-800 transition-colors"
+              >
+                <FileText size={16} />
+                Télécharger ma facture
+              </a>
+            </div>
+          )}
 
           {/* Suivi */}
           {order.tracking_number && (

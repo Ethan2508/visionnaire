@@ -210,7 +210,7 @@ export default function Header() {
                 Prendre rendez-vous
               </Link>
               <span className="text-white/30">|</span>
-              <span>Paiement en 2x 3x 4x avec Alma</span>
+              <span>Paiement en 2x 3x 4x 12x sans frais avec Alma</span>
             </div>
           </div>
         </div>
