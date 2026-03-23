@@ -12,12 +12,13 @@ export async function GET() {
     }
 
     // Vérifier que c'est un admin
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
 
+    const profile = profileData as { role: string } | null;
     if (!profile || profile.role !== "admin") {
       return NextResponse.json({ error: "Accès non autorisé" }, { status: 403 });
     }
