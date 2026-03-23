@@ -3,9 +3,18 @@ import { updateSession } from "@/lib/supabase/middleware";
 
 const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === "true";
 const MAINTENANCE_BYPASS_SECRET = process.env.MAINTENANCE_BYPASS_SECRET;
+const PRODUCTION_DOMAIN = "www.visionnairesopticiens.fr";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = request.headers.get("host") || "";
+
+  // Rediriger vercel.app vers le domaine principal
+  if (host.includes("vercel.app") || host === "visionnairesopticiens.fr") {
+    const url = new URL(pathname, `https://${PRODUCTION_DOMAIN}`);
+    url.search = request.nextUrl.search;
+    return NextResponse.redirect(url, 301);
+  }
 
   // Mode maintenance : rediriger tout le monde sauf les pages autorisées
   if (MAINTENANCE_MODE) {
