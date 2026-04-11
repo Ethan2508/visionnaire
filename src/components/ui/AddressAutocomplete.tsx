@@ -53,6 +53,13 @@ export default function AddressAutocomplete({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   const searchAddress = useCallback(async (query: string) => {
     if (query.length < 3) {
       setSuggestions([]);

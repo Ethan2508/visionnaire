@@ -41,6 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 # project root loose files
+# Note: supabase-schema.sql is tracked intentionally
 *.zip
 *.txt
 Logo.png

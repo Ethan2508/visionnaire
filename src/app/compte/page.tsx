@@ -729,7 +729,7 @@ export default function ComptePage() {
 
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">
-                  Complément d'adresse{" "}
+                  Complément d&apos;adresse{" "}
                   <span className="text-stone-400">(optionnel)</span>
                 </label>
                 <input

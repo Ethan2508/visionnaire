@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
     // S4: Verify webhook authenticity via Alma-Signature header
     const signature = request.headers.get("X-Alma-Signature");
     if (!signature) {
-      // If Alma sends a signature, verify it. Otherwise rely on callback verification.
-      console.warn("[ALMA WEBHOOK] No signature header — proceeding with callback verification");
+      console.error("[ALMA WEBHOOK] Missing X-Alma-Signature header — rejecting request");
+      return NextResponse.json({ error: "Missing signature" }, { status: 401 });
     }
 
     let body;

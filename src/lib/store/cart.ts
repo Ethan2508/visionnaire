@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from "@/lib/utils";
 
 export interface CartItem {
   variantId: string;
@@ -32,6 +33,7 @@ export const useCartStore = create<CartStore>()(
       items: [],
 
       addItem: (item) => {
+        if (item.quantity < 1) return;
         set((state) => {
           const existingIndex = state.items.findIndex(
             (i) => i.variantId === item.variantId
@@ -76,7 +78,9 @@ export const useCartStore = create<CartStore>()(
       },
 
       getTotal: () => {
-        return get().getSubtotal();
+        const subtotal = get().getSubtotal();
+        const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+        return subtotal + shipping;
       },
     }),
     {

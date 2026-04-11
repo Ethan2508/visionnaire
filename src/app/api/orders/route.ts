@@ -89,6 +89,18 @@ export async function POST(request: Request) {
     }
   }
 
+  // S6: Validate shipping address when delivery is "domicile"
+  if (deliveryMethod === "domicile") {
+    if (!shippingAddress ||
+        !shippingAddress.firstName?.trim() ||
+        !shippingAddress.lastName?.trim() ||
+        !shippingAddress.street?.trim() ||
+        !shippingAddress.city?.trim() ||
+        !shippingAddress.postalCode?.trim()) {
+      return NextResponse.json({ error: "Adresse de livraison incomplète" }, { status: 400 });
+    }
+  }
+
   // Calculer les totaux — batch fetch all variants at once (fix N+1)
   let subtotal = 0;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 const SHOP_INFO = {
@@ -45,7 +46,19 @@ export async function GET(
     // Vérifier que l'utilisateur peut voir cette facture (propriétaire ou admin)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const o = order as any;
-    const isAdmin = user.email === "contact@visionnairesopticiens.fr" || user.email === "visionnaires@orange.fr";
+
+    // Vérifier le rôle admin via service role (bypass RLS)
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const isAdmin = profile?.role === "admin";
+
     if (o.profile_id !== user.id && !isAdmin) {
       return NextResponse.json({ error: "Accès non autorisé" }, { status: 403 });
     }

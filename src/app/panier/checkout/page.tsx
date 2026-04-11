@@ -155,7 +155,24 @@ export default function CheckoutPage() {
       setError("Vous devez accepter les CGV pour finaliser votre commande.");
       return;
     }
-    
+
+    // Validation de l'adresse de livraison
+    if (deliveryMethod === "domicile") {
+      if (!address.firstName?.trim() || !address.lastName?.trim()) {
+        setError("Veuillez renseigner votre nom et prénom de livraison.");
+        return;
+      }
+      if (!address.street?.trim()) {
+        setError("Veuillez renseigner votre adresse de livraison.");
+        return;
+      }
+      if (!address.city?.trim() || !address.postalCode?.trim()) {
+        setError("Veuillez renseigner la ville et le code postal de livraison.");
+        return;
+      }
+    }
+
+    if (loading) return;
     setLoading(true);
 
     try {

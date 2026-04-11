@@ -508,7 +508,7 @@ export default function OrderDetailPage() {
                 </div>
 
                 <div className="bg-stone-50 p-4 rounded-lg text-xs text-stone-500 space-y-1">
-                  <p>• Les articles doivent être retournés dans leur état d'origine</p>
+                  <p>• Les articles doivent être retournés dans leur état d&apos;origine</p>
                   <p>• Le remboursement sera effectué sous 14 jours après réception</p>
                   <p>• Les frais de retour sont à votre charge</p>
                 </div>

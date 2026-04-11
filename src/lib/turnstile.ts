@@ -33,6 +33,7 @@ export async function verifyTurnstile(token: string, ip?: string): Promise<boole
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: formData.toString(),
+      signal: AbortSignal.timeout(5000),
     });
 
     const data: TurnstileVerifyResponse = await response.json();

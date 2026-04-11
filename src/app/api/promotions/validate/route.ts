@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       .single() as { data: any; error: any };
 
     if (error || !promo) {
-      return NextResponse.json({ error: "Code promo invalide" }, { status: 404 });
+      return NextResponse.json({ error: "Code promo invalide ou expiré" }, { status: 400 });
     }
 
     // Check dates
