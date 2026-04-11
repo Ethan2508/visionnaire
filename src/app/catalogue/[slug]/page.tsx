@@ -132,11 +132,40 @@ export default async function ProductDetailPage({ params }: Props) {
     category: categoryLabel(data.category),
   };
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Accueil",
+        item: "https://www.visionnairesopticiens.fr",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Catalogue",
+        item: "https://www.visionnairesopticiens.fr/catalogue",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: data.name,
+        item: `https://www.visionnairesopticiens.fr/catalogue/${slug}`,
+      },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <ProductDetailClient product={data} />
     </>

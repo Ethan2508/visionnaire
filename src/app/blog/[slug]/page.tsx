@@ -107,9 +107,28 @@ export async function generateMetadata({
   const { slug } = await params;
   const article = articles[slug];
   if (!article) return { title: "Article introuvable" };
+
+  const description = article.content[0].slice(0, 160);
+
   return {
     title: article.title,
-    description: article.content[0].slice(0, 160),
+    description,
+    openGraph: {
+      title: article.title,
+      description,
+      type: "article",
+      publishedTime: article.date,
+      authors: ["Visionnaire Opticiens"],
+      section: article.category,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description,
+    },
+    alternates: {
+      canonical: `/blog/${slug}`,
+    },
   };
 }
 
@@ -125,8 +144,37 @@ export default async function BlogArticlePage({
     notFound();
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: article.title,
+    description: article.content[0].slice(0, 160),
+    datePublished: article.date,
+    dateModified: article.date,
+    author: {
+      "@type": "Organization",
+      name: "Visionnaire Opticiens",
+      url: "https://www.visionnairesopticiens.fr",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Visionnaire Opticiens",
+      url: "https://www.visionnairesopticiens.fr",
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://www.visionnairesopticiens.fr/blog/${slug}`,
+    },
+    articleSection: article.category,
+  };
+
   return (
-    <article className="max-w-[900px] mx-auto px-4 sm:px-6 py-24 lg:py-32">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <article className="max-w-[900px] mx-auto px-4 sm:px-6 py-24 lg:py-32">
       {/* Back link */}
       <Link
         href="/blog"
@@ -178,5 +226,6 @@ export default async function BlogArticlePage({
         </Link>
       </div>
     </article>
+    </>
   );
 }

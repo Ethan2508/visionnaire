@@ -85,11 +85,40 @@ export default async function BrandDetailPage({ params }: Props) {
     logo: brand.logo_url,
   };
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Accueil",
+        item: "https://www.visionnairesopticiens.fr",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Marques",
+        item: "https://www.visionnairesopticiens.fr/marques",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: brand.name,
+        item: `https://www.visionnairesopticiens.fr/marques/${brand.slug}`,
+      },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <BrandDetailClient brand={brand} initialProducts={products || []} />
     </>

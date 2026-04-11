@@ -47,5 +47,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...productPages, ...brandPages];
+  // Blog articles (statically known slugs)
+  const blogSlugs = [
+    "choisir-lunettes-forme-visage",
+    "proteger-yeux-hiver",
+    "tendances-lunettes-2025",
+    "verres-progressifs-guide",
+    "lumiere-bleue-ecrans",
+    "entretenir-lunettes-luxe",
+  ];
+  const blogPages: MetadataRoute.Sitemap = blogSlugs.map((slug) => ({
+    url: `${BASE_URL}/blog/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...productPages, ...brandPages, ...blogPages];
 }

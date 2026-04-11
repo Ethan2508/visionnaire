@@ -36,12 +36,21 @@ export const metadata: Metadata = {
     title: "Visionnaire Opticiens — Lunettes de vue, soleil & sport",
     description:
       "Votre opticien de confiance à Lyon. Découvrez notre collection de lunettes de vue, soleil, ski et sport des plus grandes marques.",
+    images: [
+      {
+        url: "/logos/logo-dark.png",
+        width: 336,
+        height: 77,
+        alt: "Visionnaire Opticiens",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Visionnaire Opticiens",
     description:
       "Découvrez notre collection de lunettes de vue, soleil, ski et sport des plus grandes marques de luxe.",
+    images: ["/logos/logo-dark.png"],
   },
 };
 
@@ -53,6 +62,22 @@ export default function RootLayout({
   return (
     <html lang="fr" data-scroll-behavior="smooth">
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Visionnaire Opticiens",
+              url: "https://www.visionnairesopticiens.fr",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: "https://www.visionnairesopticiens.fr/catalogue?q={search_term_string}",
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-9BYLJM1F4R"
           strategy="afterInteractive"
