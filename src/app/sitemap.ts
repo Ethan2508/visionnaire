@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
+import { blogArticles } from "@/lib/blog-data";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr";
 
@@ -47,17 +48,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  // Blog articles (statically known slugs)
-  const blogSlugs = [
-    "choisir-lunettes-forme-visage",
-    "proteger-yeux-hiver",
-    "tendances-lunettes-2025",
-    "verres-progressifs-guide",
-    "lumiere-bleue-ecrans",
-    "entretenir-lunettes-luxe",
-  ];
-  const blogPages: MetadataRoute.Sitemap = blogSlugs.map((slug) => ({
-    url: `${BASE_URL}/blog/${slug}`,
+  // Blog articles (auto-synced from blog-data.ts)
+  const blogPages: MetadataRoute.Sitemap = blogArticles.map((a) => ({
+    url: `${BASE_URL}/blog/${a.slug}`,
     lastModified: new Date(),
     changeFrequency: "monthly" as const,
     priority: 0.6,

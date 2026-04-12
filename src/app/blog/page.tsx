@@ -1,62 +1,12 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { blogArticles } from "@/lib/blog-data";
 
 export const metadata = {
   title: "Blog — Conseils optiques et tendances lunettes",
   description:
     "Retrouvez nos articles, conseils d'opticiens et les dernières tendances en lunetterie de luxe.",
 };
-
-const articles = [
-  {
-    slug: "choisir-lunettes-forme-visage",
-    title: "Comment choisir ses lunettes selon la forme de son visage",
-    excerpt:
-      "Le choix d'une monture dépend de la morphologie du visage. Découvrez nos conseils d'expert pour trouver la paire qui sublime vos traits.",
-    category: "Conseils",
-    date: "12 février 2026",
-  },
-  {
-    slug: "proteger-yeux-hiver",
-    title: "Protéger vos yeux en hiver : l'importance des lunettes de soleil",
-    excerpt:
-      "La neige réfléchit jusqu'à 80% des UV. Nos opticiens vous expliquent pourquoi les lunettes de soleil sont essentielles toute l'année.",
-    category: "Santé visuelle",
-    date: "5 février 2026",
-  },
-  {
-    slug: "tendances-lunettes-2025",
-    title: "Les tendances lunettes 2025 : ce qu'il faut retenir",
-    excerpt:
-      "Montures oversize, acétate coloré, métal précieux... Tour d'horizon des tendances qui marqueront l'année en lunetterie de luxe.",
-    category: "Tendances",
-    date: "28 janvier 2026",
-  },
-  {
-    slug: "verres-progressifs-guide",
-    title: "Verres progressifs : le guide complet pour bien choisir",
-    excerpt:
-      "Confort, adaptation, technologies disponibles... Tout ce que vous devez savoir avant de passer aux verres progressifs.",
-    category: "Conseils",
-    date: "15 janvier 2026",
-  },
-  {
-    slug: "lumiere-bleue-ecrans",
-    title: "Lumière bleue et écrans : faut-il s'en protéger ?",
-    excerpt:
-      "Entre mythe et réalité, nos opticiens font le point sur la lumière bleue et les solutions de protection adaptées à votre quotidien.",
-    category: "Santé visuelle",
-    date: "8 janvier 2026",
-  },
-  {
-    slug: "entretenir-lunettes-luxe",
-    title: "Comment entretenir ses lunettes de luxe",
-    excerpt:
-      "Nettoyage, rangement, ajustement... Les bons gestes pour préserver la beauté et la longévité de vos montures haut de gamme.",
-    category: "Conseils",
-    date: "2 janvier 2026",
-  },
-];
 
 export default function BlogPage() {
   return (
@@ -77,7 +27,7 @@ export default function BlogPage() {
 
       {/* Articles list */}
       <div className="divide-y divide-stone-100">
-        {articles.map((article) => (
+        {blogArticles.map((article) => (
           <article key={article.slug} className="group py-8 first:pt-0">
             <Link href={`/blog/${article.slug}`} className="block">
               <div className="flex items-center gap-3 mb-3">
