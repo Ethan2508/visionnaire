@@ -27,10 +27,10 @@ export default function MaintenancePage() {
             Besoin de nous contacter ?
           </p>
           <p className="text-sm text-stone-600">
-            📞 <a href="tel:+33123456789" className="hover:underline">01 23 45 67 89</a>
+            📞 <a href="tel:+33478526222" className="hover:underline">04 78 52 62 22</a>
           </p>
           <p className="text-sm text-stone-600 mt-1">
-            ✉️ <a href="mailto:contact@visionnairesopticiens.fr" className="hover:underline">contact@visionnairesopticiens.fr</a>
+            ✉️ <a href="mailto:contact@visionnaires.fr" className="hover:underline">contact@visionnaires.fr</a>
           </p>
         </div>
         

@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
   // Mode maintenance : rediriger tout le monde sauf les pages autorisées
   if (MAINTENANCE_MODE) {
     // Pages autorisées pendant la maintenance
-    const allowedPaths = ["/maintenance", "/admin", "/auth", "/api"];
+    const allowedPaths = ["/maintenance", "/admin", "/auth", "/api", "/robots.txt", "/sitemap.xml"];
     const isAllowed = allowedPaths.some((p) => pathname.startsWith(p));
 
     // Vérifier si l'utilisateur a le cookie de bypass
