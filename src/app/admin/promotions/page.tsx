@@ -15,6 +15,7 @@ interface Promotion {
   is_active: boolean;
   starts_at: string | null;
   ends_at: string | null;
+  max_uses: number | null;
   min_order_amount: number | null;
   created_at: string;
 }
@@ -28,6 +29,7 @@ const EMPTY: Omit<Promotion, "id" | "created_at"> = {
   is_active: true,
   starts_at: null,
   ends_at: null,
+  max_uses: null,
   min_order_amount: null,
 };
 
@@ -61,6 +63,7 @@ export default function AdminPromotionsPage() {
       is_active: editing.is_active ?? true,
       starts_at: editing.starts_at || null,
       ends_at: editing.ends_at || null,
+      max_uses: editing.max_uses || null,
       min_order_amount: editing.min_order_amount || null,
     };
 
@@ -141,9 +144,15 @@ export default function AdminPromotionsPage() {
                   <input type="number" step="0.01" min="0" value={editing.discount_value || ""} onChange={(e) => setEditing({ ...editing, discount_value: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900" placeholder={editing.discount_type === "percentage" ? "10" : "25.00"} />
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-stone-600 mb-1">Montant minimum de commande</label>
-                <input type="number" step="0.01" min="0" value={editing.min_order_amount || ""} onChange={(e) => setEditing({ ...editing, min_order_amount: parseFloat(e.target.value) || null })} className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900" placeholder="Optionnel" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-stone-600 mb-1">Montant minimum de commande</label>
+                  <input type="number" step="0.01" min="0" value={editing.min_order_amount || ""} onChange={(e) => setEditing({ ...editing, min_order_amount: parseFloat(e.target.value) || null })} className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900" placeholder="Optionnel" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-stone-600 mb-1">Nombre max d&apos;utilisations</label>
+                  <input type="number" min="1" step="1" value={editing.max_uses || ""} onChange={(e) => setEditing({ ...editing, max_uses: parseInt(e.target.value) || null })} className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-900" placeholder="Illimité" />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -197,6 +206,7 @@ export default function AdminPromotionsPage() {
                   <span className="font-medium text-stone-700">
                     {promo.discount_type === "percentage" ? `-${promo.discount_value}%` : `-${formatPrice(promo.discount_value)}`}
                   </span>
+                  {promo.max_uses && <span>Max. {promo.max_uses} util.</span>}
                   {promo.min_order_amount && <span>Min. {formatPrice(promo.min_order_amount)}</span>}
                   {promo.starts_at && <span>Du {new Date(promo.starts_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>}
                   {promo.ends_at && <span>au {new Date(promo.ends_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>}
