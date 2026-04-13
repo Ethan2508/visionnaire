@@ -21,7 +21,7 @@ interface Client {
 interface ClientOrder {
   id: string;
   created_at: string;
-  total_amount: number;
+  total: number;
   status: string;
 }
 
@@ -45,14 +45,14 @@ export default function ClientsAdminPage() {
     const { data: profiles } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
 
     // Fetch orders grouped by profile
-    const { data: orders } = await supabase.from("orders").select("profile_id, total_amount") as { data: { profile_id: string; total_amount: number }[] | null };
+    const { data: orders } = await supabase.from("orders").select("profile_id, total") as { data: { profile_id: string; total: number }[] | null };
 
     const orderStats: Record<string, { count: number; total: number }> = {};
     if (orders) {
       for (const o of orders) {
         if (!orderStats[o.profile_id]) orderStats[o.profile_id] = { count: 0, total: 0 };
         orderStats[o.profile_id].count += 1;
-        orderStats[o.profile_id].total += o.total_amount || 0;
+        orderStats[o.profile_id].total += o.total || 0;
       }
     }
 
@@ -98,7 +98,7 @@ export default function ClientsAdminPage() {
     const supabase = createClient();
     const { data } = await supabase
       .from("orders")
-      .select("id, created_at, total_amount, status")
+      .select("id, created_at, total, status")
       .eq("profile_id", client.id)
       .order("created_at", { ascending: false });
     setClientOrders((data as ClientOrder[]) || []);
@@ -313,7 +313,7 @@ export default function ClientsAdminPage() {
                         className="flex items-center justify-between p-3 bg-stone-50 rounded-lg hover:bg-stone-100 transition-colors"
                       >
                         <div>
-                          <p className="text-sm font-medium text-stone-900">{formatPrice(order.total_amount)}</p>
+                          <p className="text-sm font-medium text-stone-900">{formatPrice(order.total)}</p>
                           <p className="text-xs text-stone-500">{new Date(order.created_at).toLocaleDateString("fr-FR")}</p>
                         </div>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${

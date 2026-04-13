@@ -6,6 +6,10 @@
 const LOGO_URL = "https://www.visionnairesopticiens.fr/logos/logo-black.png";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr";
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 /* ─── Base layout ─── */
 function layout(content: string): string {
   return `<!DOCTYPE html>
@@ -340,7 +344,7 @@ export function orderShippedEmail(data: ShippingNotificationData) {
     ${data.trackingNumber ? `
     ${divider()}
     <p style="margin:0;font-size:12px;color:#a8a29e;text-transform:uppercase;letter-spacing:1px;">Numéro de suivi</p>
-    <p style="margin:4px 0 0;font-size:16px;color:#1c1917;font-weight:500;font-family:monospace;">${data.trackingNumber}</p>
+    <p style="margin:4px 0 0;font-size:16px;color:#1c1917;font-weight:500;font-family:monospace;">${escapeHtml(data.trackingNumber)}</p>
     ` : ""}
     ${button("Suivre ma commande", `${SITE_URL}/compte`)}
     <p style="margin:0;font-size:12px;color:#a8a29e;">

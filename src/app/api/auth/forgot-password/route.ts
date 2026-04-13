@@ -30,13 +30,9 @@ export async function POST(request: Request) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  // Générer le lien de reset
-  const { error } = await supabase.auth.admin.generateLink({
-    type: "recovery",
-    email,
-    options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr"}/auth/reset-password`,
-    },
+  // Envoyer l'email de reset via Supabase Auth
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr"}/auth/reset-password`,
   });
 
   // Ne pas révéler si l'email existe ou non (sécurité)

@@ -12,7 +12,7 @@ export async function GET() {
   const { data: addresses } = await supabase
     .from("addresses")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("profile_id", user.id)
     .order("is_default", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -28,29 +28,29 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { label, firstName, lastName, street, street2, city, postalCode, country, isDefault } = body;
+  const { label, first_name, last_name, street, street_2, city, postal_code, country, is_default } = body;
 
   // If this is the default address, unset all other defaults
-  if (isDefault) {
+  if (is_default) {
     await supabase
       .from("addresses")
       .update({ is_default: false } as never)
-      .eq("user_id", user.id);
+      .eq("profile_id", user.id);
   }
 
   const { data: newAddress, error } = await supabase
     .from("addresses")
     .insert({
-      user_id: user.id,
+      profile_id: user.id,
       label,
-      first_name: firstName,
-      last_name: lastName,
+      first_name,
+      last_name,
       street,
-      street_2: street2 || null,
+      street_2: street_2 || null,
       city,
-      postal_code: postalCode,
+      postal_code,
       country: country || "France",
-      is_default: isDefault || false,
+      is_default: is_default || false,
     } as never)
     .select()
     .single();
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  return NextResponse.json({ address: newAddress });
+  return NextResponse.json(newAddress);
 }
 
 export async function PUT(request: Request) {
@@ -71,14 +71,14 @@ export async function PUT(request: Request) {
   }
 
   const body = await request.json();
-  const { id, label, firstName, lastName, street, street2, city, postalCode, country, isDefault } = body;
+  const { id, label, first_name, last_name, street, street_2, city, postal_code, country, is_default } = body;
 
   // If this is the default address, unset all other defaults
-  if (isDefault) {
+  if (is_default) {
     await supabase
       .from("addresses")
       .update({ is_default: false } as never)
-      .eq("user_id", user.id)
+      .eq("profile_id", user.id)
       .neq("id", id);
   }
 
@@ -86,17 +86,17 @@ export async function PUT(request: Request) {
     .from("addresses")
     .update({
       label,
-      first_name: firstName,
-      last_name: lastName,
+      first_name,
+      last_name,
       street,
-      street_2: street2 || null,
+      street_2: street_2 || null,
       city,
-      postal_code: postalCode,
+      postal_code,
       country: country || "France",
-      is_default: isDefault || false,
+      is_default: is_default || false,
     } as never)
     .eq("id", id)
-    .eq("user_id", user.id)
+    .eq("profile_id", user.id)
     .select()
     .single();
 
@@ -104,7 +104,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  return NextResponse.json({ address: updatedAddress });
+  return NextResponse.json(updatedAddress);
 }
 
 export async function DELETE(request: Request) {
@@ -115,8 +115,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
+  const body = await request.json();
+  const id = body?.id;
 
   if (!id) {
     return NextResponse.json({ error: "Missing ID" }, { status: 400 });
@@ -126,7 +126,7 @@ export async function DELETE(request: Request) {
     .from("addresses")
     .delete()
     .eq("id", id)
-    .eq("user_id", user.id);
+    .eq("profile_id", user.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });

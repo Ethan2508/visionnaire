@@ -11,14 +11,14 @@ const ALMA_API_URL = process.env.ALMA_SANDBOX === "true"
   ? "https://api.sandbox.getalma.eu/v1"
   : "https://api.getalma.eu/v1";
 
-// Utiliser le service role pour les webhooks (pas de cookies/session)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: NextRequest) {
   try {
+    // Initialiser Supabase dans la fonction pour éviter l'erreur au build
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // S4: Verify webhook authenticity via Alma-Signature header
     const signature = request.headers.get("X-Alma-Signature");
     if (!signature) {

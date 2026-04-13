@@ -28,8 +28,23 @@ export async function GET(
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
 
+    // Vérifier le rôle admin via service role (bypass RLS)
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const isAdmin = profile?.role === "admin";
+
+    // Utiliser le client admin pour les admins (bypass RLS), le client normal sinon
+    const queryClient = isAdmin ? supabaseAdmin : supabase;
+
     // Récupérer la commande avec les items et le profil
-    const { data: order, error: orderError } = await supabase
+    const { data: order, error: orderError } = await queryClient
       .from("orders")
       .select(`
         *,
@@ -46,18 +61,6 @@ export async function GET(
     // Vérifier que l'utilisateur peut voir cette facture (propriétaire ou admin)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const o = order as any;
-
-    // Vérifier le rôle admin via service role (bypass RLS)
-    const supabaseAdmin = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    const isAdmin = profile?.role === "admin";
 
     if (o.profile_id !== user.id && !isAdmin) {
       return NextResponse.json({ error: "Accès non autorisé" }, { status: 403 });

@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { verifyTurnstile } from "@/lib/turnstile";
+import { getResend, EMAIL_FROM } from "@/lib/resend";
+import { welcomeEmail } from "@/lib/emails";
 
 export async function POST(request: Request) {
   let body;
@@ -59,6 +61,20 @@ export async function POST(request: Request) {
   }
 
   // Supabase envoie automatiquement un email de confirmation quand email_confirm: false
+
+  // Envoyer l'email de bienvenue (non-bloquant)
+  try {
+    const emailData = welcomeEmail(firstName);
+    await getResend().emails.send({
+      from: EMAIL_FROM,
+      to: email,
+      subject: emailData.subject,
+      html: emailData.html,
+    });
+  } catch (emailError) {
+    console.error("[REGISTER] Welcome email error:", emailError);
+    // Ne pas bloquer l'inscription si l'email échoue
+  }
 
   return NextResponse.json({ success: true });
 }

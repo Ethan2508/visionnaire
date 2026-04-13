@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/store/cart";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from "@/lib/utils";
 import AddressAutocomplete from "@/components/ui/AddressAutocomplete";
 import {
   ArrowLeft,
@@ -23,7 +23,7 @@ type Step = "livraison" | "paiement" | "confirmation";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, getTotal, getSubtotal, getItemCount, clearCart } =
+  const { items, getSubtotal, getItemCount, clearCart } =
     useCartStore();
 
   const [mounted, setMounted] = useState(false);
@@ -104,19 +104,18 @@ export default function CheckoutPage() {
   }
 
   const subtotal = getSubtotal();
-  const total = getTotal();
-  const shippingCost = deliveryMethod === "domicile" && total < 150 ? 6.9 : 0;
+  const shippingCost = deliveryMethod === "domicile" && subtotal < FREE_SHIPPING_THRESHOLD ? SHIPPING_COST : 0;
 
   // Calcul discount
   let discount = 0;
   if (promoApplied) {
     if (promoApplied.discount_type === "percentage") {
-      discount = total * (promoApplied.discount_value / 100);
+      discount = subtotal * (promoApplied.discount_value / 100);
     } else {
-      discount = Math.min(promoApplied.discount_value, total);
+      discount = Math.min(promoApplied.discount_value, subtotal);
     }
   }
-  const finalTotal = total - discount + shippingCost;
+  const finalTotal = subtotal - discount + shippingCost;
 
   async function applyPromoCode() {
     if (!promoCode.trim()) return;
@@ -126,7 +125,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/promotions/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: promoCode.trim().toUpperCase(), orderTotal: total }),
+        body: JSON.stringify({ code: promoCode.trim().toUpperCase(), orderTotal: subtotal }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -362,9 +361,9 @@ export default function CheckoutPage() {
                           Livraison à domicile
                         </p>
                         <p className="text-sm text-stone-500">
-                          {total >= 150
+                          {subtotal >= FREE_SHIPPING_THRESHOLD
                             ? "Gratuite"
-                            : `${formatPrice(6.9)} — Offerte dès ${formatPrice(150)}`}
+                            : `${formatPrice(SHIPPING_COST)} — Offerte dès ${formatPrice(FREE_SHIPPING_THRESHOLD)}`}
                         </p>
                       </div>
                     </label>

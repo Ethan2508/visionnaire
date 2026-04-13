@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getResend, EMAIL_FROM } from "@/lib/resend";
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 // GET: Récupérer une demande de retour spécifique
 export async function GET(
   request: NextRequest,
@@ -192,7 +196,7 @@ function getEmailContent(
     case "refuse":
       message = `
         <p>Nous sommes désolés, mais votre demande de retour pour la commande <strong>${orderNumber}</strong> a été refusée.</p>
-        ${adminComment ? `<p><strong>Motif :</strong> ${adminComment}</p>` : ""}
+        ${adminComment ? `<p><strong>Motif :</strong> ${escapeHtml(adminComment)}</p>` : ""}
         <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
       `;
       break;

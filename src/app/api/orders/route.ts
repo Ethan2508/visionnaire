@@ -101,6 +101,16 @@ export async function POST(request: Request) {
     }
   }
 
+  // Validate pickup info when delivery is "boutique"
+  if (deliveryMethod === "boutique") {
+    if (!pickupInfo ||
+        !pickupInfo.firstName?.trim() ||
+        !pickupInfo.lastName?.trim() ||
+        !pickupInfo.phone?.trim()) {
+      return NextResponse.json({ error: "Informations de retrait incomplètes" }, { status: 400 });
+    }
+  }
+
   // Calculer les totaux — batch fetch all variants at once (fix N+1)
   let subtotal = 0;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

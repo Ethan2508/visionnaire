@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
 
     // Vérifier si l'utilisateur a le cookie de bypass
     const bypassCookie = request.cookies.get("maintenance_bypass")?.value;
-    const hasBypass = bypassCookie === MAINTENANCE_BYPASS_SECRET;
+    const hasBypass = !!MAINTENANCE_BYPASS_SECRET && bypassCookie === MAINTENANCE_BYPASS_SECRET;
 
     if (!isAllowed && !hasBypass) {
       return NextResponse.redirect(new URL("/maintenance", request.url));

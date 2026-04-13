@@ -97,7 +97,7 @@ function CartItemRow({ item, onUpdateQuantity, onRemove }: {
 }
 
 export default function PanierPage() {
-  const { items, removeItem, updateQuantity, getSubtotal, getTotal, getItemCount } = useCartStore();
+  const { items, removeItem, updateQuantity, getSubtotal, getItemCount } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -141,10 +141,9 @@ export default function PanierPage() {
   }
 
   const subtotal = getSubtotal();
-  const total = getTotal();
   const itemCount = getItemCount();
-  const shippingCost = total < FREE_SHIPPING_THRESHOLD ? SHIPPING_COST : 0;
-  const finalTotal = total + shippingCost;
+  const shippingCost = subtotal < FREE_SHIPPING_THRESHOLD ? SHIPPING_COST : 0;
+  const finalTotal = subtotal + shippingCost;
 
   return (
     <main className="min-h-screen bg-stone-50 py-8 sm:py-12 px-4">

@@ -231,13 +231,23 @@ export default function ComptePage() {
           });
 
       if (res.ok) {
-        const newAddress = await res.json();
+        const savedAddress = await res.json();
         if (editingAddress) {
           setAddresses((prev) =>
-            prev.map((a) => (a.id === editingAddress.id ? newAddress : a))
+            prev.map((a) => {
+              if (a.id === editingAddress.id) return savedAddress;
+              // If new address is default, unset others
+              if (savedAddress.is_default) return { ...a, is_default: false };
+              return a;
+            })
           );
         } else {
-          setAddresses((prev) => [...prev, newAddress]);
+          setAddresses((prev) => {
+            const updated = savedAddress.is_default
+              ? prev.map((a) => ({ ...a, is_default: false }))
+              : prev;
+            return [...updated, savedAddress];
+          });
         }
         closeAddressModal();
       }
