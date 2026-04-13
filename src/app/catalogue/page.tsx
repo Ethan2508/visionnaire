@@ -37,12 +37,13 @@ function CataloguePage() {
   const categoryFilter = searchParams.get("categorie") || "";
   const brandFilter = searchParams.get("marque") || "";
   const genderFilter = searchParams.get("genre") || "";
+  const formeFilter = searchParams.get("forme") || "";
   const searchQuery = searchParams.get("q") || "";
   const sortBy = searchParams.get("tri") || "recent";
 
   useEffect(() => {
     loadData();
-  }, [categoryFilter, brandFilter, genderFilter, searchQuery, sortBy]);
+  }, [categoryFilter, brandFilter, genderFilter, formeFilter, searchQuery, sortBy]);
 
   async function loadData() {
     setLoading(true);
@@ -70,6 +71,9 @@ function CataloguePage() {
     }
     if (genderFilter) {
       query = query.eq("gender", genderFilter);
+    }
+    if (formeFilter) {
+      query = query.eq("frame_shape", formeFilter);
     }
     if (searchQuery) {
       query = query.ilike("name", `%${searchQuery}%`);

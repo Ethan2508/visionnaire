@@ -5,7 +5,7 @@ import { blogArticles } from "@/lib/blog-data";
 // Force dynamic rendering — sitemap fetches from Supabase at runtime
 export const dynamic = "force-dynamic";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr";
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.visionnairesopticiens.fr").replace(/\/$/, "");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createClient(

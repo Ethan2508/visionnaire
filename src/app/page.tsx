@@ -106,7 +106,7 @@ const articles = [
       "Le choix d'une monture dépend de la morphologie du visage. Découvrez nos conseils d'expert pour trouver la paire parfaite.",
     category: "Conseils",
     image: "/images/hero/collection-femme.webp",
-    href: "/blog",
+    href: "/blog/choisir-lunettes-forme-visage",
   },
   {
     title: "Protéger vos yeux en hiver : l'importance des lunettes de soleil",
@@ -114,15 +114,15 @@ const articles = [
       "La neige réfléchit jusqu'à 80% des UV. Nos opticiens vous expliquent pourquoi les lunettes de soleil sont essentielles toute l'année.",
     category: "Santé visuelle",
     image: "/images/hero/collection-homme.webp",
-    href: "/blog",
+    href: "/blog/proteger-yeux-hiver",
   },
   {
-    title: "Les tendances lunettes 2025 : ce qu'il faut retenir",
+    title: "Les tendances lunettes 2026 : ce qu'il faut retenir",
     excerpt:
       "Montures oversize, acétate coloré, métal précieux... Tour d'horizon des tendances qui marqueront cette année.",
     category: "Tendances",
     image: "/images/hero/fred.webp",
-    href: "/blog",
+    href: "/blog/tendances-lunettes-2025",
   },
 ];
 

@@ -223,9 +223,13 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                   -{Math.round((1 - selectedVariant.price_override / product.base_price) * 100)}%
                 </span>
               </div>
-            ) : (
+            ) : currentPrice > 0 ? (
               <p className="text-2xl font-bold text-stone-900">
                 {formatPrice(currentPrice)}
+              </p>
+            ) : (
+              <p className="text-2xl font-semibold text-stone-600">
+                Prix en boutique
               </p>
             )}
           </div>
@@ -284,7 +288,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
               });
               setShowCartModal(true);
             }}
-            disabled={!selectedVariant || selectedVariant.stock_quantity === 0}
+            disabled={!selectedVariant || selectedVariant.stock_quantity === 0 || currentPrice === 0}
             className="inline-flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-stone-800 transition-colors mt-6 w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ShoppingBag size={18} />

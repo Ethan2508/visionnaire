@@ -75,7 +75,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${brandName}${p.name}`,
-    description: p.description || `${brandName}${p.name} — ${categoryLabel(p.category)} à ${formatPrice(p.base_price)}. Livraison offerte dès 150€. Paiement en 2x, 3x, 4x sans frais.`,
+    description: p.description || `${brandName}${p.name} — ${categoryLabel(p.category)}${p.base_price > 0 ? ` à ${formatPrice(p.base_price)}` : ""}. Livraison offerte dès 150€. Paiement en 2x, 3x, 4x sans frais.`,
     openGraph: {
       title: `${brandName}${p.name} | Visionnaire Opticiens`,
       description: p.description || `${brandName}${p.name} — ${categoryLabel(p.category)} de luxe.`,
@@ -120,7 +120,7 @@ export default async function ProductDetailPage({ params }: Props) {
     description: data.description,
     image: primaryImage,
     brand: data.brands ? { "@type": "Brand", name: data.brands.name } : undefined,
-    offers: {
+    offers: data.base_price > 0 ? {
       "@type": "Offer",
       priceCurrency: "EUR",
       price: data.base_price,
@@ -128,7 +128,7 @@ export default async function ProductDetailPage({ params }: Props) {
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
       seller: { "@type": "Organization", name: "Visionnaire Opticiens" },
-    },
+    } : undefined,
     category: categoryLabel(data.category),
   };
 

@@ -82,15 +82,15 @@ export default function RegisterPage() {
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <UserPlus className="text-green-600" size={24} />
             </div>
-            <h2 className="text-xl font-semibold text-stone-900 mb-2">Compte cree !</h2>
+            <h2 className="text-xl font-semibold text-stone-900 mb-2">Compte créé !</h2>
             <p className="text-stone-500 mb-6">
-              Un email de confirmation vous a ete envoye. Verifiez votre boite de reception pour activer votre compte.
+              Un email de confirmation vous a été envoyé. Vérifiez votre boîte de réception pour activer votre compte.
             </p>
             <Link
               href="/auth/login"
               className="inline-block bg-stone-900 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-stone-800 transition-colors"
             >
-              Retour a la connexion
+              Retour à la connexion
             </Link>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ShoppingBag } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 import AnimatedSection from "./AnimatedSection";
 
 interface ProductImage {
@@ -159,7 +160,9 @@ export default function FeaturedProducts({
                     {product.name}
                   </h3>
                   <p className="text-sm text-stone-500 mt-1">
-                    {product.base_price.toLocaleString("fr-FR")} €
+                    {product.base_price > 0
+                      ? formatPrice(product.base_price)
+                      : "Prix en boutique"}
                   </p>
                 </div>
               </Link>

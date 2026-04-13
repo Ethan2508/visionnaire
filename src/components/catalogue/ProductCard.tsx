@@ -164,7 +164,7 @@ export default function ProductCard({
           </div>
         ) : (
           <p className="text-sm font-bold text-stone-900 mt-2">
-            {formatPrice(price)}
+            {price > 0 ? formatPrice(price) : "Prix en boutique"}
           </p>
         )}
       </div>

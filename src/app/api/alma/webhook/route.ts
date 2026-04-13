@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createHmac, timingSafeEqual } from "crypto";
 
 // GET handler pour permettre à Alma de vérifier l'URL du webhook
 export async function GET() {
@@ -26,9 +27,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing signature" }, { status: 401 });
     }
 
+    // Read raw body for signature verification, then parse
+    const rawBody = await request.text();
+
+    // Verify HMAC-SHA256 signature
+    const expectedSignature = createHmac("sha256", ALMA_API_KEY)
+      .update(rawBody)
+      .digest("hex");
+
+    try {
+      const sigBuffer = Buffer.from(signature, "hex");
+      const expectedBuffer = Buffer.from(expectedSignature, "hex");
+      if (sigBuffer.length !== expectedBuffer.length || !timingSafeEqual(sigBuffer, expectedBuffer)) {
+        console.error("[ALMA WEBHOOK] Invalid signature — rejecting request");
+        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      }
+    } catch {
+      console.error("[ALMA WEBHOOK] Signature verification failed — rejecting request");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
     let body;
     try {
-      body = await request.json();
+      body = JSON.parse(rawBody);
     } catch {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }

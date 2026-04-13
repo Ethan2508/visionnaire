@@ -119,16 +119,16 @@ export async function POST(request: Request) {
   const variantIds = items.map((i: { variantId: string }) => i.variantId);
   const { data: variants } = await supabase
     .from("product_variants")
-    .select("id, price_override, products(base_price)")
+    .select("id, price_override, stock_quantity, products(base_price)")
     .in("id", variantIds);
 
   if (!variants || variants.length === 0) {
     return NextResponse.json({ error: "Variantes introuvables" }, { status: 400 });
   }
 
-  const variantMap = new Map<string, { price_override: number | null; products: { base_price: number } | null }>();
+  const variantMap = new Map<string, { price_override: number | null; stock_quantity: number; products: { base_price: number } | null }>();
   for (const v of variants) {
-    variantMap.set(v.id, v as unknown as { price_override: number | null; products: { base_price: number } | null });
+    variantMap.set(v.id, v as unknown as { price_override: number | null; stock_quantity: number; products: { base_price: number } | null });
   }
 
   for (const item of items) {
@@ -137,7 +137,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Variante ${item.variantId} introuvable` }, { status: 400 });
     }
 
+    // Check stock availability
+    if (variant.stock_quantity < item.quantity) {
+      return NextResponse.json(
+        { error: `Stock insuffisant pour "${item.productName}" (${variant.stock_quantity} disponible${variant.stock_quantity > 1 ? "s" : ""})` },
+        { status: 400 }
+      );
+    }
+
     const unitPrice = Number(variant.price_override ?? variant.products?.base_price ?? 0);
+
+    // Reject orders for price-0 products
+    if (unitPrice === 0) {
+      return NextResponse.json(
+        { error: `"${item.productName}" n'est pas disponible à la vente en ligne` },
+        { status: 400 }
+      );
+    }
+
     const itemTotal = unitPrice * item.quantity;
     subtotal += itemTotal;
 
@@ -253,6 +270,22 @@ export async function POST(request: Request) {
   if (itemsError) {
     console.error("[ORDER] Error creating order items:", itemsError);
     return NextResponse.json({ error: "Erreur lors de la création des articles" }, { status: 500 });
+  }
+
+  // Decrement stock for each ordered variant
+  for (const item of items) {
+    await supabase.rpc("decrement_stock", {
+      p_variant_id: item.variantId,
+      p_quantity: item.quantity,
+    }).then(({ error: stockErr }) => {
+      if (stockErr) {
+        // Fallback: manual decrement if RPC doesn't exist
+        supabase
+          .from("product_variants")
+          .update({ stock_quantity: (variantMap.get(item.variantId)?.stock_quantity ?? 0) - item.quantity } as never)
+          .eq("id", item.variantId);
+      }
+    });
   }
 
   // Ajouter au historique des statuts
