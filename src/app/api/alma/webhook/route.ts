@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
 
     // Mapper les états Alma vers nos statuts de commande
     let newStatus: string | null = null;
+    let shouldRestoreStock = false;
 
     switch (almaState) {
       case "in_progress":
@@ -100,6 +101,12 @@ export async function POST(request: NextRequest) {
         break;
       case "refunded":
         newStatus = "remboursee";
+        shouldRestoreStock = true;
+        break;
+      case "failed":
+      case "cancelled":
+        newStatus = "annulee";
+        shouldRestoreStock = true;
         break;
       case "default":
         // Impayé — on garde la commande payée mais on logue
@@ -130,13 +137,48 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
         }
 
+        // Restaurer le stock si paiement échoué/annulé/remboursé
+        if (shouldRestoreStock) {
+          const { data: orderItems } = await supabase
+            .from("order_items")
+            .select("variant_id, quantity")
+            .eq("order_id", orderId);
+
+          if (orderItems) {
+            for (const item of orderItems) {
+              await supabase.rpc("increment_stock", {
+                p_variant_id: item.variant_id,
+                p_quantity: item.quantity,
+              }).then(({ error: stockErr }) => {
+                if (stockErr) {
+                  // Fallback: manual increment via raw SQL
+                  supabase
+                    .from("product_variants")
+                    .select("stock_quantity")
+                    .eq("id", item.variant_id)
+                    .single()
+                    .then(({ data: variant }) => {
+                      if (variant) {
+                        supabase
+                          .from("product_variants")
+                          .update({ stock_quantity: (variant.stock_quantity || 0) + item.quantity } as never)
+                          .eq("id", item.variant_id);
+                      }
+                    });
+                }
+              });
+            }
+            console.log(`[ALMA WEBHOOK] Stock restored for order ${orderId}`);
+          }
+        }
+
         // Ajouter une entrée dans l'historique des statuts
         await supabase
           .from("order_status_history")
           .insert({
             order_id: orderId,
             status: newStatus,
-            comment: `Paiement Alma confirmé (${almaState}) — ID: ${paymentId}`,
+            comment: `Paiement Alma ${almaState === "refunded" ? "remboursé" : almaState === "failed" || almaState === "cancelled" ? "échoué/annulé" : "confirmé"} (${almaState}) — ID: ${paymentId}`,
           } as never);
 
         console.log(`[ALMA WEBHOOK] Order ${orderId} updated to ${newStatus}`);

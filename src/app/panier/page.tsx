@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useCartStore, type CartItem } from "@/lib/store/cart";
-import { formatPrice, SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from "@/lib/utils";
+import { formatPrice, FREE_SHIPPING_THRESHOLD } from "@/lib/utils";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, ArrowRight } from "lucide-react";
 
 function CartItemRow({ item, onUpdateQuantity, onRemove }: {
@@ -142,8 +142,6 @@ export default function PanierPage() {
 
   const subtotal = getSubtotal();
   const itemCount = getItemCount();
-  const shippingCost = subtotal < FREE_SHIPPING_THRESHOLD ? SHIPPING_COST : 0;
-  const finalTotal = subtotal + shippingCost;
 
   return (
     <main className="min-h-screen bg-stone-50 py-8 sm:py-12 px-4">
@@ -193,21 +191,21 @@ export default function PanierPage() {
                 <div className="flex justify-between text-stone-600">
                   <span>Livraison</span>
                   <span>
-                    {shippingCost === 0 ? (
+                    {subtotal >= FREE_SHIPPING_THRESHOLD ? (
                       <span className="text-green-600 font-medium">Offerte</span>
                     ) : (
-                      formatPrice(shippingCost)
+                      <span className="text-stone-400">Calculée au checkout</span>
                     )}
                   </span>
                 </div>
-                {shippingCost > 0 && (
+                {subtotal < FREE_SHIPPING_THRESHOLD && (
                   <p className="text-xs text-stone-400">
-                    Livraison offerte dès {formatPrice(150)}
+                    Livraison offerte dès {formatPrice(FREE_SHIPPING_THRESHOLD)} — Retrait en boutique gratuit
                   </p>
                 )}
                 <div className="border-t border-stone-100 pt-3 flex justify-between font-semibold text-stone-900 text-base">
                   <span>Total</span>
-                  <span>{formatPrice(finalTotal)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
               </div>
 

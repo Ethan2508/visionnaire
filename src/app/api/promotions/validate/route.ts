@@ -40,6 +40,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check max_uses
+    if (promo.max_uses) {
+      const { count } = await supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("promo_code", promo.code);
+      if ((count || 0) >= promo.max_uses) {
+        return NextResponse.json({ error: "Ce code promo a atteint sa limite d'utilisation" }, { status: 400 });
+      }
+    }
+
     return NextResponse.json({
       promotion: {
         code: promo.code,

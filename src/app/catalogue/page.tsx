@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import ProductCard from "@/components/catalogue/ProductCard";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, Loader2 } from "lucide-react";
 import { categoryLabel } from "@/lib/utils";
 
 interface Product {
@@ -25,12 +25,17 @@ interface Brand {
   name: string;
 }
 
+const PRODUCTS_PER_PAGE = 24;
+
 function CataloguePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
 
   // Filtres actifs depuis l'URL
@@ -60,7 +65,7 @@ function CataloguePage() {
     // Construire la requete produits
     let query = supabase
       .from("products")
-      .select("id, name, slug, category, gender, base_price, frame_shape, brands(name), product_images(url, is_primary), product_variants(price_override, is_active)")
+      .select("id, name, slug, category, gender, base_price, frame_shape, brands(name), product_images(url, is_primary), product_variants(price_override, is_active)", { count: "exact" })
       .eq("is_active", true);
 
     if (categoryFilter) {
@@ -90,9 +95,42 @@ function CataloguePage() {
       query = query.order("created_at", { ascending: false });
     }
 
-    const { data } = (await query) as { data: Product[] | null };
+    query = query.range(0, PRODUCTS_PER_PAGE - 1);
+
+    const { data, count } = (await query) as { data: Product[] | null; count: number | null };
     setProducts(data || []);
+    setTotalCount(count || 0);
+    setHasMore((data?.length || 0) < (count || 0));
     setLoading(false);
+  }
+
+  async function loadMore() {
+    setLoadingMore(true);
+    const supabase = createClient();
+
+    let query = supabase
+      .from("products")
+      .select("id, name, slug, category, gender, base_price, frame_shape, brands(name), product_images(url, is_primary), product_variants(price_override, is_active)")
+      .eq("is_active", true);
+
+    if (categoryFilter) query = query.eq("category", categoryFilter);
+    if (brandFilter) query = query.eq("brand_id", brandFilter);
+    if (genderFilter) query = query.eq("gender", genderFilter);
+    if (formeFilter) query = query.eq("frame_shape", formeFilter);
+    if (searchQuery) query = query.ilike("name", `%${searchQuery}%`);
+
+    if (sortBy === "prix-asc") query = query.order("base_price", { ascending: true });
+    else if (sortBy === "prix-desc") query = query.order("base_price", { ascending: false });
+    else if (sortBy === "nom") query = query.order("name");
+    else query = query.order("created_at", { ascending: false });
+
+    query = query.range(products.length, products.length + PRODUCTS_PER_PAGE - 1);
+
+    const { data } = (await query) as { data: Product[] | null };
+    const newProducts = [...products, ...(data || [])];
+    setProducts(newProducts);
+    setHasMore(newProducts.length < totalCount);
+    setLoadingMore(false);
   }
 
   function setFilter(key: string, value: string) {
@@ -123,7 +161,7 @@ function CataloguePage() {
             Résultats pour &quot;{searchQuery}&quot;
           </p>
         )}
-        <p className="text-stone-500 mt-1">{products.length} produit{products.length > 1 ? "s" : ""}</p>
+        <p className="text-stone-500 mt-1">{totalCount} produit{totalCount > 1 ? "s" : ""}</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -297,6 +335,22 @@ function CataloguePage() {
                   />
                   );
               })}
+            </div>
+          )}
+
+          {hasMore && (
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-800 transition-colors disabled:opacity-50"
+              >
+                {loadingMore ? (
+                  <><Loader2 size={16} className="animate-spin" /> Chargement...</>
+                ) : (
+                  `Voir plus de produits (${products.length}/${totalCount})`
+                )}
+              </button>
             </div>
           )}
         </div>

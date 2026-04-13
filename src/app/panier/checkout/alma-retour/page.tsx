@@ -12,14 +12,17 @@ function AlmaRetourContent() {
   const orderId = searchParams.get("orderId");
   const { clearCart } = useCartStore();
 
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "pending" | "error">("loading");
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!orderId) {
       setStatus("error");
       return;
     }
+
+    let cancelled = false;
 
     async function verifyPayment() {
       try {
@@ -30,23 +33,33 @@ function AlmaRetourContent() {
         });
         const data = await res.json();
 
+        if (cancelled) return;
+
         if (res.ok && data.success) {
           setOrderNumber(data.orderNumber);
           setStatus("success");
           clearCart();
+        } else if (res.status === 402 && retryCount < 5) {
+          // Paiement en cours de traitement — réessayer dans 3 secondes
+          setStatus("pending");
+          setTimeout(() => {
+            if (!cancelled) setRetryCount((c) => c + 1);
+          }, 3000);
         } else {
           setStatus("error");
         }
       } catch {
-        setStatus("error");
+        if (!cancelled) setStatus("error");
       }
     }
 
     verifyPayment();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId]);
 
-  if (status === "loading") {
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId, retryCount]);
+
+  if (status === "loading" || status === "pending") {
     return (
       <main className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
         <div className="max-w-md text-center">
@@ -55,7 +68,9 @@ function AlmaRetourContent() {
             Vérification du paiement…
           </h1>
           <p className="text-stone-500">
-            Nous vérifions votre paiement Alma. Merci de patienter.
+            {status === "pending"
+              ? "Votre paiement est en cours de traitement. Veuillez patienter quelques instants."
+              : "Nous vérifions votre paiement Alma. Merci de patienter."}
           </p>
         </div>
       </main>

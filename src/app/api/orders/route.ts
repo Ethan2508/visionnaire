@@ -185,6 +185,17 @@ export async function POST(request: Request) {
       const validEnd = !promo.ends_at || new Date(promo.ends_at) >= now;
       const validMin = !promo.min_order_amount || subtotal >= promo.min_order_amount;
 
+      // Check max_uses
+      if (promo.max_uses) {
+        const { count: usageCount } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("promo_code", promo.code);
+        if ((usageCount || 0) >= promo.max_uses) {
+          return NextResponse.json({ error: "Ce code promo a atteint sa limite d'utilisation" }, { status: 400 });
+        }
+      }
+
       if (validStart && validEnd && validMin) {
         if (promo.discount_type === "percentage") {
           discountAmount = subtotal * (promo.discount_value / 100);

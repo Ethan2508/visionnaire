@@ -85,6 +85,24 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     setMounted(true);
+    // Pre-fill saved address
+    fetch("/api/account/addresses")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.addresses?.length > 0) {
+          const addr = data.addresses[0]; // is_default first
+          setAddress({
+            firstName: addr.first_name || "",
+            lastName: addr.last_name || "",
+            street: addr.street || "",
+            street2: addr.street_2 || "",
+            city: addr.city || "",
+            postalCode: addr.postal_code || "",
+            country: addr.country || "France",
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   if (!mounted) {
@@ -214,6 +232,9 @@ export default function CheckoutPage() {
         setLoading(false);
         return;
       }
+
+      // Vider le panier dès que la commande est créée (avant la redirection Alma)
+      clearCart();
 
       // Créer le paiement Alma et rediriger
       const almaRes = await fetch("/api/alma/create-payment", {
