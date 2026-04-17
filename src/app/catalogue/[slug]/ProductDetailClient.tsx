@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice, categoryLabel } from "@/lib/utils";
-import { ShoppingBag, ChevronRight, ChevronLeft, Check, Search, X, Box } from "lucide-react";
+import { ShoppingBag, ChevronRight, ChevronLeft, Check, Search, X, Box, CreditCard } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart";
 import { getSketchfabEmbedUrl } from "@/data/sketchfab-map";
 
@@ -290,6 +290,17 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
               </p>
             )}
           </div>
+
+          {/* Bandeau paiement en plusieurs fois */}
+          {currentPrice >= 50 && (
+            <div className="mt-3 flex items-center gap-2 bg-stone-50 rounded-lg px-3 py-2.5 border border-stone-100">
+              <CreditCard size={16} className="text-stone-500 shrink-0" />
+              <p className="text-sm text-stone-600">
+                ou <span className="font-semibold text-stone-900">3× {formatPrice(Math.ceil(currentPrice / 3 * 100) / 100)}</span> sans frais avec{" "}
+                <span className="font-semibold text-stone-900">Alma</span>
+              </p>
+            </div>
+          )}
 
           {/* Sélection variante */}
           {activeVariants.length > 1 && (
