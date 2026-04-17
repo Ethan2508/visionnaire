@@ -4,8 +4,9 @@ import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice, categoryLabel } from "@/lib/utils";
-import { ShoppingBag, ChevronRight, ChevronLeft, Check, Search, X } from "lucide-react";
+import { ShoppingBag, ChevronRight, ChevronLeft, Check, Search, X, Box } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart";
+import { getSketchfabEmbedUrl } from "@/data/sketchfab-map";
 
 interface Variant {
   id: string;
@@ -42,13 +43,30 @@ interface Product {
   product_images: ProductImage[];
 }
 
-export default function ProductDetailClient({ product }: { product: Product }) {
+interface RecommendedProduct {
+  id: string;
+  name: string;
+  slug: string;
+  base_price: number;
+  category: string;
+  brands: { name: string; slug: string } | null;
+  product_images: { url: string; is_primary: boolean }[];
+}
+
+interface Props {
+  product: Product;
+  sketchfabUid: string | null;
+  recommended: RecommendedProduct[];
+}
+
+export default function ProductDetailClient({ product, sketchfabUid, recommended }: Props) {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(
     product.product_variants.filter((v) => v.is_active)[0] || null
   );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
+  const [show3D, setShow3D] = useState(false);
 
   // Zoom state
   const [isZooming, setIsZooming] = useState(false);
@@ -109,6 +127,43 @@ export default function ProductDetailClient({ product }: { product: Product }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
         {/* Images */}
         <div>
+          {/* 3D / Photos toggle */}
+          {sketchfabUid && (
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => setShow3D(false)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  !show3D ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                }`}
+              >
+                <Search size={14} />
+                Photos
+              </button>
+              <button
+                onClick={() => setShow3D(true)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  show3D ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                }`}
+              >
+                <Box size={14} />
+                Vue 3D
+              </button>
+            </div>
+          )}
+
+          {/* 3D Viewer */}
+          {show3D && sketchfabUid ? (
+            <div className="aspect-square bg-stone-100 rounded-xl overflow-hidden mb-3">
+              <iframe
+                title="Vue 3D du produit"
+                src={getSketchfabEmbedUrl(sketchfabUid)}
+                className="w-full h-full border-0"
+                allow="autoplay; fullscreen; xr-spatial-tracking"
+                allowFullScreen
+              />
+            </div>
+          ) : (
+          <>
           <div
             ref={mainImageRef}
             className="aspect-square bg-stone-100 rounded-xl overflow-hidden mb-3 relative group cursor-zoom-in"
@@ -193,6 +248,8 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                 </button>
               ))}
             </div>
+          )}
+          </>
           )}
         </div>
 
@@ -370,6 +427,55 @@ export default function ProductDetailClient({ product }: { product: Product }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Produits recommandés */}
+      {recommended.length > 0 && (
+        <section className="mt-16 border-t border-stone-200 pt-10">
+          <h2 className="text-xl font-bold text-stone-900 mb-6">Vous aimerez aussi</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {recommended.slice(0, 4).map((rec) => {
+              const img = rec.product_images?.find((i) => i.is_primary)?.url || rec.product_images?.[0]?.url;
+              return (
+                <Link
+                  key={rec.id}
+                  href={`/catalogue/${rec.slug}`}
+                  className="group block bg-white rounded-xl overflow-hidden border border-stone-100 hover:border-stone-300 hover:shadow-md transition-all"
+                >
+                  <div className="aspect-square bg-stone-100 relative overflow-hidden">
+                    {img ? (
+                      <Image
+                        src={img}
+                        alt={rec.name}
+                        fill
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-stone-300 text-sm">
+                        Pas d&#39;image
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    {rec.brands && (
+                      <p className="text-[11px] font-medium text-stone-400 uppercase tracking-wide">
+                        {rec.brands.name}
+                      </p>
+                    )}
+                    <p className="text-sm font-semibold text-stone-900 mt-0.5 truncate">
+                      {rec.name}
+                    </p>
+                    <p className="text-sm font-bold text-stone-900 mt-1">
+                      {formatPrice(rec.base_price)}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       )}
     </div>
   );

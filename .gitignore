@@ -48,3 +48,4 @@ Logo.png
 hero-*.avif
 hero-*.png
 hero-*.jpg
+.env*.local
