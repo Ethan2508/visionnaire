@@ -333,9 +333,7 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
           {/* Stock */}
           {selectedVariant && (
             <p className={`text-sm mt-4 ${selectedVariant.stock_quantity > 0 ? "text-green-600" : "text-red-600"}`}>
-              {selectedVariant.stock_quantity > 0
-                ? `En stock (${selectedVariant.stock_quantity} disponible${selectedVariant.stock_quantity > 1 ? "s" : ""})`
-                : "Rupture de stock"}
+              {selectedVariant.stock_quantity > 0 ? "En stock" : "Rupture de stock"}
             </p>
           )}
 
