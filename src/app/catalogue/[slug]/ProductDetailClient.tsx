@@ -153,7 +153,7 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
 
           {/* 3D Viewer */}
           {show3D && sketchfabUid ? (
-            <div className="aspect-square bg-stone-100 rounded-xl overflow-hidden mb-3">
+            <div className="aspect-square bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl overflow-hidden mb-3 ring-1 ring-stone-200/60">
               <iframe
                 title="Vue 3D du produit"
                 src={getSketchfabEmbedUrl(sketchfabUid)}
@@ -166,7 +166,7 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
           <>
           <div
             ref={mainImageRef}
-            className="aspect-square bg-stone-100 rounded-xl overflow-hidden mb-3 relative group cursor-zoom-in"
+            className="aspect-square bg-gradient-to-br from-white via-stone-50 to-stone-100 rounded-2xl overflow-hidden mb-3 relative group cursor-zoom-in ring-1 ring-stone-200/60 shadow-sm"
             onMouseEnter={() => setIsZooming(true)}
             onMouseLeave={() => setIsZooming(false)}
             onMouseMove={handleMouseMove}
@@ -178,7 +178,7 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
                   alt={currentImage.alt_text || product.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
-                  className={`object-cover transition-opacity duration-200 ${
+                  className={`object-contain p-6 md:p-10 transition-opacity duration-200 ${
                     isZooming ? "opacity-0" : "opacity-100"
                   }`}
                   priority
@@ -189,9 +189,10 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
                   }`}
                   style={{
                     backgroundImage: `url(${currentImage.url})`,
-                    backgroundSize: "250%",
+                    backgroundSize: "200%",
                     backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
                     backgroundRepeat: "no-repeat",
+                    backgroundColor: "#fafaf9",
                   }}
                 />
                 <div
@@ -237,14 +238,14 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
                 <button
                   key={img.id}
                   onClick={() => setCurrentImageIndex(i)}
-                  className={`shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                  className={`shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 bg-white transition-all ${
                     currentImageIndex === i
-                      ? "border-stone-900 ring-1 ring-stone-900"
+                      ? "border-amber-700 ring-2 ring-amber-700/30"
                       : "border-stone-200 hover:border-stone-400"
                   }`}
                   aria-label={`Voir image ${i + 1}`}
                 >
-                  <Image src={img.url} alt={img.alt_text || `${product.name} - vue ${i + 1}`} width={80} height={80} className="w-full h-full object-cover" loading="lazy" />
+                  <Image src={img.url} alt={img.alt_text || `${product.name} - vue ${i + 1}`} width={80} height={80} className="w-full h-full object-contain p-1.5" loading="lazy" />
                 </button>
               ))}
             </div>
@@ -254,23 +255,24 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
         </div>
 
         {/* Infos */}
-        <div>
+        <div className="md:pl-2">
           {product.brands && (
             <Link
               href={`/marques/${product.brands.slug}`}
-              className="text-sm font-medium text-stone-500 uppercase tracking-wide hover:text-stone-900"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-amber-800 uppercase tracking-[0.2em] hover:text-amber-900"
             >
+              <span className="h-px w-6 bg-amber-700/60" />
               {product.brands.name}
             </Link>
           )}
-          <h1 className="text-2xl md:text-3xl font-bold text-stone-900 mt-1">
+          <h1 className="text-3xl md:text-4xl font-serif font-bold text-stone-900 mt-2 leading-tight tracking-tight">
             {product.name}
           </h1>
 
-          <div className="mt-4">
+          <div className="mt-5">
             {selectedVariant?.price_override != null && selectedVariant.price_override < product.base_price ? (
               <div className="flex items-baseline gap-3">
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-3xl font-bold text-red-600">
                   {formatPrice(selectedVariant.price_override)}
                 </p>
                 <p className="text-lg text-stone-400 line-through">
@@ -281,7 +283,7 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
                 </span>
               </div>
             ) : currentPrice > 0 ? (
-              <p className="text-2xl font-bold text-stone-900">
+              <p className="text-3xl font-bold text-stone-900 tracking-tight">
                 {formatPrice(currentPrice)}
               </p>
             ) : (
@@ -289,15 +291,16 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
                 Prix en boutique
               </p>
             )}
+            <p className="text-xs text-stone-500 mt-1">TVA incluse · Livraison offerte dès 150€</p>
           </div>
 
           {/* Bandeau paiement en plusieurs fois */}
           {currentPrice >= 50 && (
-            <div className="mt-3 flex items-center gap-2 bg-stone-50 rounded-lg px-3 py-2.5 border border-stone-100">
-              <CreditCard size={16} className="text-stone-500 shrink-0" />
-              <p className="text-sm text-stone-600">
-                ou <span className="font-semibold text-stone-900">3× {formatPrice(Math.ceil(currentPrice / 3 * 100) / 100)}</span> sans frais avec{" "}
-                <span className="font-semibold text-stone-900">Alma</span>
+            <div className="mt-4 flex items-center gap-3 bg-gradient-to-r from-amber-50 to-stone-50 rounded-xl px-4 py-3 border border-amber-200/60">
+              <CreditCard size={18} className="text-amber-700 shrink-0" />
+              <p className="text-sm text-stone-700">
+                ou <span className="font-bold text-stone-900">3× {formatPrice(Math.ceil(currentPrice / 3 * 100) / 100)}</span> sans frais avec{" "}
+                <span className="font-bold text-stone-900">Alma</span>
               </p>
             </div>
           )}
@@ -305,17 +308,17 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
           {/* Sélection variante */}
           {activeVariants.length > 1 && (
             <div className="mt-6">
-              <h3 className="text-sm font-semibold text-stone-900 mb-2">
-                Couleur : {selectedVariant?.color_name}
+              <h3 className="text-xs font-bold text-stone-900 mb-2 uppercase tracking-[0.15em]">
+                Couleur · <span className="text-stone-500 font-medium normal-case tracking-normal">{selectedVariant?.color_name}</span>
               </h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2.5">
                 {activeVariants.map((v) => (
                   <button
                     key={v.id}
                     onClick={() => setSelectedVariant(v)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                    className={`w-9 h-9 rounded-full border-2 transition-all hover:scale-110 ${
                       selectedVariant?.id === v.id
-                        ? "border-stone-900 ring-2 ring-stone-900 ring-offset-2"
+                        ? "border-amber-700 ring-2 ring-amber-700/30 ring-offset-2 scale-110"
                         : "border-stone-300 hover:border-stone-500"
                     }`}
                     style={{ backgroundColor: v.color_hex || "#ccc" }}
@@ -357,16 +360,32 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
               setShowCartModal(true);
             }}
             disabled={!selectedVariant || selectedVariant.stock_quantity === 0 || currentPrice === 0}
-            className="inline-flex items-center gap-2 bg-stone-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-stone-800 transition-colors mt-6 w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 bg-stone-900 text-white px-8 py-4 rounded-xl font-semibold tracking-wide hover:bg-stone-800 transition-all hover:shadow-lg hover:-translate-y-0.5 mt-6 w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
           >
             <ShoppingBag size={18} />
             Ajouter au panier
           </button>
 
+          {/* Trust badges */}
+          <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+            <div className="flex flex-col items-center gap-1 py-2">
+              <span className="text-amber-700 text-base">✦</span>
+              <span className="text-[11px] font-medium text-stone-700 leading-tight">Authentique<br/>& garanti 2 ans</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 py-2 border-x border-stone-200">
+              <span className="text-amber-700 text-base">✦</span>
+              <span className="text-[11px] font-medium text-stone-700 leading-tight">Livraison offerte<br/>dès 150€</span>
+            </div>
+            <div className="flex flex-col items-center gap-1 py-2">
+              <span className="text-amber-700 text-base">✦</span>
+              <span className="text-[11px] font-medium text-stone-700 leading-tight">Conseils experts<br/>en boutique</span>
+            </div>
+          </div>
+
           {/* Description */}
           {product.description && (
-            <div className="mt-8">
-              <h3 className="text-sm font-semibold text-stone-900 mb-2">Description</h3>
+            <div className="mt-8 border-t border-stone-200 pt-6">
+              <h3 className="text-xs font-bold text-stone-900 mb-3 uppercase tracking-[0.15em]">Description</h3>
               <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-line break-words" style={{ overflowWrap: "anywhere" }}>
                 {product.description}
               </p>
@@ -375,13 +394,13 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
 
           {/* Specs */}
           {specs.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-sm font-semibold text-stone-900 mb-2">Caractéristiques</h3>
+            <div className="mt-6 border-t border-stone-200 pt-6">
+              <h3 className="text-xs font-bold text-stone-900 mb-3 uppercase tracking-[0.15em]">Caractéristiques</h3>
               <dl className="grid grid-cols-2 gap-2">
                 {specs.map((spec) => (
-                  <div key={spec.label} className="bg-stone-50 rounded-lg px-3 py-2">
-                    <dt className="text-xs text-stone-500">{spec.label}</dt>
-                    <dd className="text-sm font-medium text-stone-900">{spec.value}</dd>
+                  <div key={spec.label} className="bg-gradient-to-br from-stone-50 to-white rounded-xl px-4 py-3 border border-stone-200/60">
+                    <dt className="text-[11px] text-stone-500 uppercase tracking-wider">{spec.label}</dt>
+                    <dd className="text-sm font-semibold text-stone-900 mt-0.5">{spec.value}</dd>
                   </div>
                 ))}
               </dl>

@@ -49,3 +49,10 @@ hero-*.avif
 hero-*.png
 hero-*.jpg
 .env*.local
+
+# Supplier image archives (do not commit)
+OneDrive_2026-04-17/
+GUCCI/
+*.zip
+Price_List_*.xlsx
+VISUELS*.xlsx
