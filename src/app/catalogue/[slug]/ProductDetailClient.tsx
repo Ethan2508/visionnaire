@@ -153,7 +153,7 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
 
           {/* 3D Viewer */}
           {show3D && sketchfabUid ? (
-            <div className="aspect-square bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl overflow-hidden mb-3 ring-1 ring-stone-200/60">
+            <div className="aspect-square bg-white rounded-2xl overflow-hidden mb-3 ring-1 ring-stone-200/60">
               <iframe
                 title="Vue 3D du produit"
                 src={getSketchfabEmbedUrl(sketchfabUid)}
@@ -166,7 +166,7 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
           <>
           <div
             ref={mainImageRef}
-            className="aspect-square bg-gradient-to-br from-white via-stone-50 to-stone-100 rounded-2xl overflow-hidden mb-3 relative group cursor-zoom-in ring-1 ring-stone-200/60 shadow-sm"
+            className="aspect-square bg-white rounded-2xl overflow-hidden mb-3 relative group cursor-zoom-in ring-1 ring-stone-200/60 shadow-sm"
             onMouseEnter={() => setIsZooming(true)}
             onMouseLeave={() => setIsZooming(false)}
             onMouseMove={handleMouseMove}
@@ -192,7 +192,7 @@ export default function ProductDetailClient({ product, sketchfabUid, recommended
                     backgroundSize: "200%",
                     backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
                     backgroundRepeat: "no-repeat",
-                    backgroundColor: "#fafaf9",
+                    backgroundColor: "#ffffff",
                   }}
                 />
                 <div
