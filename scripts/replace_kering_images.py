@@ -25,7 +25,10 @@ if not SERVICE_KEY:
     print("ERROR: set SUPABASE_SERVICE_KEY env var", file=sys.stderr)
     sys.exit(1)
 BUCKET = "products"
-IMG_ROOT = Path("/tmp/kering-img")
+IMG_ROOTS = [
+    Path("/tmp/kering-img"),
+    Path("/Users/ethan/Coding/visionnaireopticiens/00.CLIENTS CARTIER/4. PHOTOS MODELES PAR COLLECTION"),
+]
 MAX_IMAGES = 5
 VIEW_PRIORITY = ["front", "cat", "zoom"]
 
@@ -34,6 +37,7 @@ BRANDS = {
     "82cb62c5-deb0-4131-aa64-3b150e832d83": "Montblanc",
     "5e06fafa-f165-4e1c-80a1-d9b9e065d56c": "Saint Laurent",
     "168d845e-e6c8-4696-b620-f60f924f93c9": "Bottega Veneta",
+    "78ef5a1d-1f67-4231-996e-feed6d608f00": "Cartier",
 }
 
 FNAME_RE = re.compile(r"^(?P<key>.+?)-(?P<variant>\d{3,4}[A-Z]?)-(?P<view>front|cat|zoom)-xxl\.(?P<ext>jpg|jpeg|png)$", re.IGNORECASE)
@@ -42,14 +46,17 @@ FNAME_RE = re.compile(r"^(?P<key>.+?)-(?P<variant>\d{3,4}[A-Z]?)-(?P<view>front|
 def index_images():
     """Return dict[key_upper] -> list of (variant, view, abs_path, ext)."""
     idx = defaultdict(list)
-    for path in IMG_ROOT.rglob("*"):
-        if not path.is_file():
+    for root in IMG_ROOTS:
+        if not root.exists():
             continue
-        m = FNAME_RE.match(path.name)
-        if not m:
-            continue
-        key = m.group("key").upper()
-        idx[key].append((m.group("variant"), m.group("view").lower(), str(path), m.group("ext").lower()))
+        for path in root.rglob("*"):
+            if not path.is_file():
+                continue
+            m = FNAME_RE.match(path.name)
+            if not m:
+                continue
+            key = m.group("key").upper()
+            idx[key].append((m.group("variant"), m.group("view").lower(), str(path), m.group("ext").lower()))
     return idx
 
 
@@ -57,6 +64,9 @@ def candidate_keys(brand: str, name: str):
     """Return ordered candidate keys to look up in the index."""
     if brand in ("Gucci", "Montblanc", "Bottega Veneta"):
         m = re.search(r"\b([A-Z]{2}\d{3,5}[A-Z]{0,3})\b", name)
+        return [m.group(1).upper()] if m else []
+    if brand == "Cartier":
+        m = re.search(r"\b(CT\d{3,5}[A-Z]{0,3})\b", name, re.IGNORECASE)
         return [m.group(1).upper()] if m else []
     if brand == "Saint Laurent":
         rest = re.sub(r"^Saint Laurent\s+", "", name).strip()

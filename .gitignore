@@ -56,3 +56,6 @@ GUCCI/
 *.zip
 Price_List_*.xlsx
 VISUELS*.xlsx
+
+# Supplier asset folders
+00.CLIENTS CARTIER/
