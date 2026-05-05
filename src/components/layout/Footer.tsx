@@ -143,6 +143,21 @@ export default function Footer() {
             </div>
           </div>
         </div>
+        <div className="border-t border-white/5">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 text-center">
+            <p className="text-[11px] text-white/30">
+              Site conçu et développé par{" "}
+              <a
+                href="https://stapes.fr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-white/60 hover:text-white transition-colors"
+              >
+                stapes.fr
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
     </footer>
   );
